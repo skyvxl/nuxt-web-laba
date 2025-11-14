@@ -7,7 +7,8 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "lint": "eslint --ext .js,.ts,.vue ."
   },
   "dependencies": {
     "@nuxt/eslint": "1.10.0",
@@ -17,8 +18,10 @@
     "@nuxt/image": "2.0.0",
     "@nuxt/test-utils": "3.20.1",
     "@tailwindcss/vite": "^4.1.17",
+    "appwrite": "^21.4.0",
     "daisyui": "^5.5.3",
     "eslint": "^9.0.0",
+    "imask": "^7.6.1",
     "nuxt": "^4.2.1",
     "tailwindcss": "^4.1.17",
     "vue": "^3.5.24",
