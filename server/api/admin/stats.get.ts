@@ -1,6 +1,4 @@
 import { Query } from "node-appwrite";
-import { createError } from "h3";
-import { createAppwriteServices } from "@@/server/utils/appwrite";
 
 export default defineEventHandler(async () => {
   const config = useRuntimeConfig();

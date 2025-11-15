@@ -471,8 +471,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
-import { useAuth } from "~/composables/useAuth";
 import { parseAppError } from "~/shared/services/app-error";
 
 const {

@@ -339,10 +339,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref, watch } from "vue";
-import { useRoute } from "vue-router";
 import type { Product } from "~/shared/models/product";
-import { useAuth } from "~/composables/useAuth";
 
 interface CharacteristicRow {
   key: string;

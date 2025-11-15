@@ -130,11 +130,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useHead } from "#imports";
-import { useAuth } from "~/composables/useAuth";
-
 const navItems = [
   {
     label: "Дашборд",

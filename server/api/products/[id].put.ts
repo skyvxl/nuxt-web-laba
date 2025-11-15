@@ -1,9 +1,3 @@
-import { createAppwriteServices } from "@@/server/utils/appwrite";
-import {
-  normalizeProductPayload,
-  toAppwriteDocumentData,
-} from "@@/server/utils/productPayload";
-
 export default defineEventHandler(async (event) => {
   const id = event.context.params?.id as string | undefined;
   if (!id) {

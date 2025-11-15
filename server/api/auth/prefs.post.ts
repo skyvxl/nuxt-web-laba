@@ -1,5 +1,3 @@
-import { createAppwriteServices } from "@@/server/utils/appwrite";
-
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const prefs = body?.prefs ?? body?.preferences ?? null;

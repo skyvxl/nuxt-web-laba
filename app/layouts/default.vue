@@ -201,25 +201,19 @@
               <div class="space-y-2">
                 <h3 class="font-bold text-lg">Категории</h3>
                 <ul class="menu">
-                  <li>
-                    <NuxtLink to="/products" class="btn btn-ghost justify-start"
-                      >Смартфоны</NuxtLink
+                  <li
+                    v-for="category in catalogCategoryLinks"
+                    :key="category.value"
+                  >
+                    <NuxtLink
+                      :to="{
+                        path: '/products',
+                        query: { categories: category.value },
+                      }"
+                      class="btn btn-ghost justify-start"
                     >
-                  </li>
-                  <li>
-                    <NuxtLink to="/products" class="btn btn-ghost justify-start"
-                      >Ноутбуки</NuxtLink
-                    >
-                  </li>
-                  <li>
-                    <NuxtLink to="/products" class="btn btn-ghost justify-start"
-                      >Бытовая техника</NuxtLink
-                    >
-                  </li>
-                  <li>
-                    <NuxtLink to="/products" class="btn btn-ghost justify-start"
-                      >Аксессуары</NuxtLink
-                    >
+                      {{ category.label }}
+                    </NuxtLink>
                   </li>
                 </ul>
               </div>
@@ -286,25 +280,16 @@
             </li>
             <div class="divider" />
             <li class="menu-title">Категории</li>
-            <li>
-              <NuxtLink to="/products" class="btn btn-ghost justify-start"
-                >Смартфоны</NuxtLink
+            <li v-for="category in catalogCategoryLinks" :key="category.value">
+              <NuxtLink
+                :to="{
+                  path: '/products',
+                  query: { categories: category.value },
+                }"
+                class="btn btn-ghost justify-start"
               >
-            </li>
-            <li>
-              <NuxtLink to="/products" class="btn btn-ghost justify-start"
-                >Ноутбуки</NuxtLink
-              >
-            </li>
-            <li>
-              <NuxtLink to="/products" class="btn btn-ghost justify-start"
-                >Бытовая техника</NuxtLink
-              >
-            </li>
-            <li>
-              <NuxtLink to="/products" class="btn btn-ghost justify-start"
-                >Аксессуары</NuxtLink
-              >
+                {{ category.label }}
+              </NuxtLink>
             </li>
           </ul>
         </div>
@@ -336,11 +321,6 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
-import { useHead } from "#imports";
-import { useAuth } from "~/composables/useAuth";
-
 const {
   user,
   initialized,
@@ -351,6 +331,12 @@ const {
 await check();
 
 const router = useRouter();
+const catalogCategoryLinks = [
+  { label: "Смартфоны", value: "Смартфоны" },
+  { label: "Ноутбуки", value: "Ноутбуки" },
+  { label: "Бытовая техника", value: "Бытовая техника" },
+  { label: "Аксессуары", value: "Аксессуары" },
+];
 const theme = ref("caramellatte");
 const themeCookie = useCookie("theme");
 const hasLocalTheme = ref(Boolean(themeCookie.value));

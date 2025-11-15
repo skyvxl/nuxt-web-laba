@@ -1,9 +1,24 @@
 import type { H3Event } from "h3";
-import { createAppwriteServices } from "@@/server/utils/appwrite";
+interface NormalizedProduct {
+  id?: string;
+  name?: string;
+  category?: string;
+  price?: number;
+  oldPrice?: number | null;
+  image?: string;
+  shortDescription?: string;
+  description?: string;
+  characteristics: Record<string, string>;
+  features: string[];
+}
 
-export default defineEventHandler(async (_event: H3Event) => {
+export default defineEventHandler(async (event: H3Event) => {
   const { databases } = createAppwriteServices();
   const config = useRuntimeConfig();
+  const query = getQuery(event);
+  const searchTermRaw = typeof query.q === "string" ? query.q.trim() : "";
+  const searchTerm = searchTermRaw.toLowerCase();
+  const categoriesFilter = normalizeCategories(query.categories);
 
   try {
     const response = await databases.listDocuments(
@@ -11,59 +26,207 @@ export default defineEventHandler(async (_event: H3Event) => {
       config.public.appwriteProductsCollectionId
     );
 
-    const products = (response.documents || []).map((doc: unknown) => {
-      const data = doc as unknown as Record<string, unknown>;
-      let characteristics: Record<string, string> = {};
-      if (typeof data.characteristics === "string") {
-        try {
-          characteristics = JSON.parse(data.characteristics);
-        } catch {
-          characteristics = {};
+    const categorySet = new Set<string>();
+    const mappedProducts: NormalizedProduct[] = (response.documents || []).map(
+      (doc: unknown) => {
+        const data = doc as unknown as Record<string, unknown>;
+        const product = normalizeProductDocument(data, doc);
+        if (product.category) {
+          categorySet.add(String(product.category));
         }
-      } else if (
-        typeof data.characteristics === "object" &&
-        data.characteristics !== null
-      ) {
-        characteristics =
-          (data.characteristics as unknown as Record<string, string>) || {};
+        return product;
       }
+    );
 
-      let features: string[] = [];
-      if (typeof data.features === "string") {
-        try {
-          features = JSON.parse(data.features);
-        } catch {
-          features = [];
-        }
-      } else if (Array.isArray(data.features)) {
-        features = data.features as unknown as string[];
-      }
+    const filteredByCategory = categoriesFilter.length
+      ? mappedProducts.filter((product) =>
+          categoriesFilter.includes(
+            String(product.category || "").toLowerCase()
+          )
+        )
+      : mappedProducts;
 
-      const id = (doc as unknown as Record<string, unknown>)["$id"] as
-        | string
-        | undefined;
+    const results = searchTerm
+      ? applyFuzzySearch(filteredByCategory, searchTerm)
+      : filteredByCategory;
 
-      return {
-        id,
-        name: data.name,
-        category: data.category,
-        price: data.price,
-        oldPrice: data.oldPrice,
-        image: data.image,
-        shortDescription: data.shortDescription,
-        description: data.description,
-        characteristics,
-        features,
-      };
-    });
-
-    return { products };
+    return {
+      products: results,
+      availableCategories: Array.from(categorySet).sort((a, b) =>
+        a.localeCompare(b, "ru")
+      ),
+    };
   } catch (err) {
     // On server errors, return empty array with code for debugging
     console.warn("Failed to load products", err);
     return {
       products: [],
+      availableCategories: [],
       error: String(err),
     };
   }
 });
+
+function normalizeProductDocument(
+  data: Record<string, unknown>,
+  rawDoc: unknown
+): NormalizedProduct {
+  let characteristics: Record<string, string> = {};
+  if (typeof data.characteristics === "string") {
+    try {
+      characteristics = JSON.parse(data.characteristics);
+    } catch {
+      characteristics = {};
+    }
+  } else if (
+    typeof data.characteristics === "object" &&
+    data.characteristics !== null
+  ) {
+    characteristics =
+      (data.characteristics as unknown as Record<string, string>) || {};
+  }
+
+  let features: string[] = [];
+  if (typeof data.features === "string") {
+    try {
+      features = JSON.parse(data.features);
+    } catch {
+      features = [];
+    }
+  } else if (Array.isArray(data.features)) {
+    features = (data.features as unknown as string[]).map((item) =>
+      String(item ?? "")
+    );
+  }
+
+  const id = (rawDoc as unknown as Record<string, unknown>)["$id"] as
+    | string
+    | undefined;
+
+  return {
+    id,
+    name: toOptionalString(data.name),
+    category: toOptionalString(data.category),
+    price: toOptionalNumber(data.price),
+    oldPrice: toOptionalNullableNumber(data.oldPrice),
+    image: toOptionalString(data.image),
+    shortDescription: toOptionalString(data.shortDescription),
+    description: toOptionalString(data.description),
+    characteristics,
+    features,
+  };
+}
+
+function toOptionalString(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length ? trimmed : undefined;
+  }
+  return undefined;
+}
+
+function toOptionalNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string" && value.trim().length) {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? undefined : parsed;
+  }
+  return undefined;
+}
+
+function toOptionalNullableNumber(value: unknown): number | null | undefined {
+  if (value === null) {
+    return null;
+  }
+  return toOptionalNumber(value);
+}
+
+function normalizeCategories(value: unknown): string[] {
+  if (!value) return [];
+  const rawList = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+    ? value.split(",")
+    : [];
+  return rawList
+    .map((item) =>
+      String(item ?? "")
+        .trim()
+        .toLowerCase()
+    )
+    .filter(Boolean);
+}
+
+function applyFuzzySearch(products: NormalizedProduct[], searchTerm: string) {
+  return products
+    .map((product) => ({
+      product,
+      score: computeSearchScore(product, searchTerm),
+    }))
+    .filter((entry) => entry.score >= 0.35)
+    .sort((a, b) => b.score - a.score)
+    .map((entry) => entry.product);
+}
+
+function computeSearchScore(product: NormalizedProduct, term: string) {
+  const normalizedTerm = term.toLowerCase();
+  const fields = [
+    product.name,
+    product.category,
+    product.shortDescription,
+    ...(Array.isArray(product.features) ? product.features : []),
+  ];
+
+  let bestScore = 0;
+  for (const rawField of fields) {
+    const field = normalizeField(rawField);
+    if (!field) continue;
+    if (field.includes(normalizedTerm)) {
+      return 1;
+    }
+    const similarity =
+      1 -
+      levenshteinDistance(field, normalizedTerm) /
+        Math.max(field.length, normalizedTerm.length);
+    if (similarity > bestScore) {
+      bestScore = similarity;
+    }
+  }
+  return bestScore;
+}
+
+function normalizeField(value: unknown) {
+  if (!value) return "";
+  return String(value).toLowerCase().trim();
+}
+
+function levenshteinDistance(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const matrix = Array.from({ length: a.length + 1 }, () =>
+    Array.from({ length: b.length + 1 }, () => 0)
+  );
+
+  for (let i = 0; i <= a.length; i++) {
+    matrix[i][0] = i;
+  }
+  for (let j = 0; j <= b.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return matrix[a.length][b.length];
+}

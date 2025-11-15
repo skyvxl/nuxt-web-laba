@@ -1,5 +1,3 @@
-import { createAppwriteServices } from "@@/server/utils/appwrite";
-
 export default defineEventHandler(async (_event) => {
   const { account } = createAppwriteServices();
   try {

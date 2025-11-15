@@ -1,5 +1,3 @@
-import { createError } from "h3";
-
 export interface NormalizedProductPayload {
   name: string;
   category: string;

@@ -1,5 +1,3 @@
-import { createAppwriteServices } from "@@/server/utils/appwrite";
-
 export default defineEventHandler(async (event) => {
   const id = event.context.params?.id as string | undefined;
   if (!id) {

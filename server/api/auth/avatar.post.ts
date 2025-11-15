@@ -1,6 +1,3 @@
-import { readMultipartFormData } from "h3";
-import { createAppwriteServices } from "@@/server/utils/appwrite";
-
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const { account, storage, ID } = createAppwriteServices();

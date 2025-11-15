@@ -1,5 +1,3 @@
-import { createAppwriteServices } from "@@/server/utils/appwrite";
-
 export default defineEventHandler(async (_event) => {
   const { databases } = createAppwriteServices();
   const config = useRuntimeConfig();
