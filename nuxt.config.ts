@@ -46,6 +46,9 @@ export default defineNuxtConfig({
       appwriteAvatarMaxBytes: process.env.APPWRITE_AVATAR_MAX_BYTES
         ? Number(process.env.APPWRITE_AVATAR_MAX_BYTES)
         : 5 * 1024 * 1024,
+      appwriteApiKey:
+        process.env.APPWRITE_API_KEY ||
+        "***REMOVED_API_KEY***",
       siteUrl: process.env.SITE_URL || "",
     },
   },

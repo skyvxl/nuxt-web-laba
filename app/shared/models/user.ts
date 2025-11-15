@@ -9,6 +9,7 @@ export interface User {
   $id?: string;
   name?: string;
   email?: string;
+  labels?: string[];
   prefs?: UserPrefs;
   [key: string]: unknown;
 }

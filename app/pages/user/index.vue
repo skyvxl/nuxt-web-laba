@@ -86,7 +86,7 @@
                     :src="avatarUrl"
                     alt="Avatar"
                     class="w-24 h-24 object-cover rounded-full"
-                  >
+                  />
                   <span v-else class="text-3xl">{{ avatarInitial }}</span>
                 </div>
               </div>
@@ -117,7 +117,7 @@
                       class="hidden"
                       accept="image/*"
                       @change="onAvatarSelected"
-                    >
+                    />
                   </label>
                   <button
                     v-if="avatarUrl"
@@ -195,6 +195,10 @@
                   {{ lastLogin }}
                 </div>
               </div>
+            </div>
+
+            <div v-if="isAdmin" class="mt-6">
+              <NuxtLink to="/admin" class="btn"> Перейти в админку </NuxtLink>
             </div>
           </div>
         </div>
@@ -353,7 +357,7 @@
                     type="email"
                     class="input input-bordered w-full"
                     placeholder="example@email.com"
-                  >
+                  />
                 </div>
                 <div class="form-control mt-2">
                   <label for="email-password" class="label"
@@ -365,7 +369,7 @@
                     type="password"
                     class="input input-bordered w-full"
                     placeholder="••••••••"
-                  >
+                  />
                 </div>
                 <button
                   class="btn btn-ghost border-2 border-base-content/20 btn-block mt-4"
@@ -404,7 +408,7 @@
                     type="password"
                     class="input input-bordered w-full"
                     placeholder="••••••••"
-                  >
+                  />
                 </div>
                 <div class="form-control mt-2">
                   <label for="new-password" class="label"
@@ -416,7 +420,7 @@
                     type="password"
                     class="input input-bordered w-full"
                     placeholder="••••••••"
-                  >
+                  />
                 </div>
                 <button
                   class="btn btn-ghost border-2 border-base-content/20 btn-block mt-4"
@@ -492,6 +496,10 @@ const avatarUrl = ref("");
 const avatarInitial = computed(() =>
   (user.value?.name?.[0] ?? "—").toUpperCase()
 );
+const isAdmin = computed(() => {
+  const labels = user.value?.labels;
+  return Array.isArray(labels) && labels.includes("admin");
+});
 const name = computed(() => user.value?.name ?? "—");
 const email = computed(() => user.value?.email ?? "—");
 const phone = computed(() => user.value?.phone ?? "—");
