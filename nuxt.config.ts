@@ -5,6 +5,18 @@ declare const process: { env: Record<string, string | undefined> };
 export default defineNuxtConfig({
   srcDir: "app",
   compatibilityDate: "2025-07-15",
+  app: {
+    head: {
+      script: [
+        {
+          key: "theme-init",
+          tagPosition: "head",
+          innerHTML:
+            '(function(){try{var theme=localStorage.getItem("theme");if(theme){document.documentElement.setAttribute("data-theme", theme);}else if(!document.documentElement.getAttribute("data-theme")){document.documentElement.setAttribute("data-theme","caramellatte");}}catch(e){}})();',
+        },
+      ],
+    },
+  },
   devtools: {
     enabled: true,
 
@@ -42,6 +54,9 @@ export default defineNuxtConfig({
         process.env.APPWRITE_PRODUCTS_COLLECTION_ID || "id",
       appwriteAvatarBucketId:
         process.env.APPWRITE_AVATAR_BUCKET_ID || "***REMOVED_BUCKET_ID***",
+      appwriteAvatarMaxBytes: process.env.APPWRITE_AVATAR_MAX_BYTES
+        ? Number(process.env.APPWRITE_AVATAR_MAX_BYTES)
+        : 5 * 1024 * 1024,
       siteUrl: process.env.SITE_URL || "",
     },
   },

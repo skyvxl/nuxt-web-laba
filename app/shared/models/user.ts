@@ -12,5 +12,3 @@ export interface User {
   prefs?: UserPrefs;
   [key: string]: unknown;
 }
-
-export default User;

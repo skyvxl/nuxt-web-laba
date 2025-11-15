@@ -10,6 +10,7 @@ export type AppErrorCode =
   | "resource_already_exists"
   | "file_size_exceeded"
   | "file_type_not_allowed"
+  | "invalid_email"
   | "unknown_error";
 
 export interface AppErrorInfo {
@@ -68,6 +69,17 @@ export function parseAppError(err: unknown): AppErrorInfo {
     return {
       code: "phone_already_exists",
       message: "Этот номер уже зарегистрирован",
+    };
+  }
+
+  if (
+    lower.includes("invalid `email` param") ||
+    lower.includes("invalid 'email' param") ||
+    lower.includes("must be a valid email address")
+  ) {
+    return {
+      code: "invalid_email",
+      message: "Введите корректный email",
     };
   }
 

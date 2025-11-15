@@ -1,25 +1,51 @@
-import { ref } from "vue";
+import { Client, Account, Storage, ID } from "appwrite";
 import type { User } from "~/shared/models/user";
 
+let clientRef: Client | null = null;
+let accountRef: Account | null = null;
+let storageRef: Storage | null = null;
+
+const user = ref<User | null>(null);
+const initialized = ref(false);
+
+function ensureSdk() {
+  if (!import.meta.client || clientRef) return;
+  const config = useRuntimeConfig();
+  const sdk = new Client()
+    .setEndpoint(config.public.appwriteEndpoint)
+    .setProject(config.public.appwriteProjectId);
+  clientRef = sdk;
+  accountRef = new Account(sdk);
+  storageRef = new Storage(sdk);
+}
+
 export function useAuth() {
-  const user = ref<User | null>(null);
-  const initialized = ref(false);
+  ensureSdk();
 
   async function check() {
+    ensureSdk();
+    if (!import.meta.client || !accountRef) {
+      initialized.value = true;
+      if (!import.meta.client) {
+        user.value = null;
+      }
+      return;
+    }
     try {
-      const { data } = await useFetch("/api/auth/user");
-      user.value = (data.value?.user ?? null) as User | null;
+      const current = (await accountRef.get()) as unknown as User;
+      user.value = current;
+    } catch {
+      user.value = null;
     } finally {
       initialized.value = true;
     }
   }
 
   async function login(email: string, password: string) {
-    const res = await $fetch("/api/auth/login", {
-      method: "POST",
-      body: { email, password },
-    });
-    return res;
+    ensureSdk();
+    if (!accountRef) throw new Error("Appwrite account unavailable");
+    await accountRef.createEmailPasswordSession(email, password);
+    await check();
   }
 
   async function register(
@@ -28,50 +54,159 @@ export function useAuth() {
     name?: string,
     phone?: string
   ) {
-    return $fetch("/api/auth/register", {
-      method: "POST",
-      body: { email, password, name, phone },
-    });
+    ensureSdk();
+    if (!accountRef) throw new Error("Appwrite account unavailable");
+    const created = await accountRef.create(ID.unique(), email, password, name);
+    await accountRef.createEmailPasswordSession(email, password);
+    if (phone) {
+      try {
+        const accountExt = accountRef as unknown as {
+          updatePhone?: (args: {
+            phone: string;
+            password?: string;
+          }) => Promise<unknown>;
+        };
+        if (typeof accountExt.updatePhone === "function") {
+          await accountExt.updatePhone({ phone, password });
+        }
+      } catch {
+        // ignore phone errors
+      }
+    }
+    await check();
+    return created;
   }
 
   async function logout() {
-    await $fetch("/api/auth/logout", { method: "POST" });
+    ensureSdk();
+    if (!accountRef) return;
+    await accountRef.deleteSession("current");
     user.value = null;
   }
 
   async function uploadAvatar(file: File) {
-    const form = new FormData();
-    form.append("avatar", file);
-    const res = await $fetch("/api/auth/avatar", {
-      method: "POST",
-      body: form,
+    ensureSdk();
+    if (!storageRef || !accountRef)
+      throw new Error("Avatar upload unavailable");
+    const config = useRuntimeConfig();
+    const maxBytes =
+      (config.public.appwriteAvatarMaxBytes as number | undefined) ??
+      5 * 1024 * 1024;
+    if (file.size > maxBytes) throw new Error("file_too_large");
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) throw new Error("file_type");
+
+    const bucketId = config.public.appwriteAvatarBucketId;
+    const previousFileId = user.value?.prefs?.avatarFileId as
+      | string
+      | undefined;
+    if (previousFileId) {
+      try {
+        await storageRef.deleteFile(bucketId, previousFileId);
+      } catch {
+        /* ignore delete failures */
+      }
+    }
+
+    const currentUser = await accountRef.get();
+    const res = await storageRef.createFile(bucketId, ID.unique(), file, [
+      `read("user:${currentUser.$id}")`,
+      'read("users")',
+      `update("user:${currentUser.$id}")`,
+      `delete("user:${currentUser.$id}")`,
+    ]);
+
+    await updatePrefsSafe({
+      avatarFileId: res.$id,
+      avatarFileName: res.name,
     });
-    await check();
     return res;
   }
 
   async function deleteAvatar(fileId: string) {
-    await $fetch("/api/auth/avatar", { method: "DELETE", body: { fileId } });
-    await check();
+    ensureSdk();
+    if (!storageRef || !accountRef) return;
+    const config = useRuntimeConfig();
+    try {
+      await storageRef.deleteFile(config.public.appwriteAvatarBucketId, fileId);
+    } catch {
+      /* ignore */
+    }
+    try {
+      await updatePrefsSafe({
+        avatarFileId: null,
+        avatarFileName: null,
+      });
+    } catch {
+      /* ignore */
+    }
   }
 
   async function setPreferences(prefs: Record<string, unknown>) {
-    await $fetch("/api/auth/prefs", { method: "POST", body: { prefs } });
+    ensureSdk();
+    if (!accountRef) return;
+    await updatePrefsSafe(prefs);
+  }
+
+  async function updatePrefsSafe(partial: Record<string, unknown>) {
+    ensureSdk();
+    if (!accountRef) return;
+    let currentPrefs: Record<string, unknown> =
+      (user.value?.prefs as Record<string, unknown>) ?? {};
+    try {
+      currentPrefs = (await accountRef.getPrefs()) as Record<string, unknown>;
+    } catch {
+      /* ignore: fallback to cached prefs */
+    }
+    let merged: Record<string, unknown> = { ...currentPrefs };
+    for (const [key, value] of Object.entries(partial)) {
+      if (value === undefined) {
+        const { [key]: _removed, ...rest } = merged;
+        merged = rest;
+      } else {
+        merged[key] = value;
+      }
+    }
+    await accountRef.updatePrefs(merged);
     await check();
   }
 
-  async function getAvatarUrl(fileId: string) {
-    if (!fileId) return "";
-    const data = (await $fetch(`/api/auth/avatar/${fileId}`)) as unknown;
-    if (
-      data &&
-      typeof data === "object" &&
-      "url" in (data as Record<string, unknown>)
-    ) {
-      const urlValue = (data as Record<string, unknown>)["url"];
-      if (typeof urlValue === "string") return urlValue;
+  function getAvatarUrl(fileId: string) {
+    ensureSdk();
+    if (!storageRef || !fileId) return "";
+    const config = useRuntimeConfig();
+    return storageRef
+      .getFileView(config.public.appwriteAvatarBucketId, fileId)
+      .toString();
+  }
+
+  async function updateEmail(newEmail: string, password?: string) {
+    ensureSdk();
+    if (!accountRef) throw new Error("Appwrite account unavailable");
+    const accountExt = accountRef as unknown as {
+      updateEmail?: (email: string, password?: string) => Promise<void>;
+    };
+    if (typeof accountExt.updateEmail !== "function") {
+      throw new Error("update_email_unsupported");
     }
-    return "";
+    await accountExt.updateEmail(newEmail, password);
+    await check();
+  }
+
+  async function updatePassword(newPassword: string, oldPassword?: string) {
+    ensureSdk();
+    if (!accountRef) throw new Error("Appwrite account unavailable");
+    const accountExt = accountRef as unknown as {
+      updatePassword?: (
+        newPassword: string,
+        oldPassword?: string
+      ) => Promise<void>;
+    };
+    if (typeof accountExt.updatePassword !== "function") {
+      throw new Error("update_password_unsupported");
+    }
+    await accountExt.updatePassword(newPassword, oldPassword);
+    await check();
   }
 
   return {
@@ -85,5 +220,7 @@ export function useAuth() {
     deleteAvatar,
     setPreferences,
     getAvatarUrl,
+    updateEmail,
+    updatePassword,
   };
 }

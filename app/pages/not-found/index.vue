@@ -7,5 +7,5 @@
 </template>
 
 <script setup>
-useHead({ title: '404 — Не найдено' });
+useHead({ title: "404 — Не найдено" });
 </script>
