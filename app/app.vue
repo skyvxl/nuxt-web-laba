@@ -45,7 +45,7 @@
               <NuxtLink to="/about" class="btn btn-ghost">О нас</NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/catalog" class="btn btn-ghost">Каталог</NuxtLink>
+              <NuxtLink to="/products" class="btn btn-ghost">Каталог</NuxtLink>
             </li>
             <li>
               <NuxtLink to="/contacts" class="btn btn-ghost">Контакты</NuxtLink>
@@ -202,22 +202,22 @@
                 <h3 class="font-bold text-lg">Категории</h3>
                 <ul class="menu">
                   <li>
-                    <NuxtLink to="/catalog" class="btn btn-ghost justify-start"
+                    <NuxtLink to="/products" class="btn btn-ghost justify-start"
                       >Смартфоны</NuxtLink
                     >
                   </li>
                   <li>
-                    <NuxtLink to="/catalog" class="btn btn-ghost justify-start"
+                    <NuxtLink to="/products" class="btn btn-ghost justify-start"
                       >Ноутбуки</NuxtLink
                     >
                   </li>
                   <li>
-                    <NuxtLink to="/catalog" class="btn btn-ghost justify-start"
+                    <NuxtLink to="/products" class="btn btn-ghost justify-start"
                       >Бытовая техника</NuxtLink
                     >
                   </li>
                   <li>
-                    <NuxtLink to="/catalog" class="btn btn-ghost justify-start"
+                    <NuxtLink to="/products" class="btn btn-ghost justify-start"
                       >Аксессуары</NuxtLink
                     >
                   </li>
@@ -275,7 +275,7 @@
               >
             </li>
             <li>
-              <NuxtLink to="/catalog" class="btn btn-ghost justify-start"
+              <NuxtLink to="/products" class="btn btn-ghost justify-start"
                 >Каталог</NuxtLink
               >
             </li>
@@ -287,22 +287,22 @@
             <div class="divider" />
             <li class="menu-title">Категории</li>
             <li>
-              <NuxtLink to="/catalog" class="btn btn-ghost justify-start"
+              <NuxtLink to="/products" class="btn btn-ghost justify-start"
                 >Смартфоны</NuxtLink
               >
             </li>
             <li>
-              <NuxtLink to="/catalog" class="btn btn-ghost justify-start"
+              <NuxtLink to="/products" class="btn btn-ghost justify-start"
                 >Ноутбуки</NuxtLink
               >
             </li>
             <li>
-              <NuxtLink to="/catalog" class="btn btn-ghost justify-start"
+              <NuxtLink to="/products" class="btn btn-ghost justify-start"
                 >Бытовая техника</NuxtLink
               >
             </li>
             <li>
-              <NuxtLink to="/catalog" class="btn btn-ghost justify-start"
+              <NuxtLink to="/products" class="btn btn-ghost justify-start"
                 >Аксессуары</NuxtLink
               >
             </li>

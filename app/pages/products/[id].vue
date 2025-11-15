@@ -113,7 +113,7 @@ if (product) {
     link: [
       {
         rel: "canonical",
-        href: `${useRuntimeConfig().public.siteUrl || ""}/product/${
+        href: `${useRuntimeConfig().public.siteUrl || ""}/products/${
           product.id
         }`,
       },

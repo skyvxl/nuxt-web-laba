@@ -31,7 +31,7 @@
             Купить
           </button>
           <NuxtLink
-            :to="`/product/${product.id}`"
+            :to="`/products/${product.id}`"
             class="btn btn-ghost border-2 border-base-content/20 btn-sm"
             >Подробнее</NuxtLink
           >

@@ -10,7 +10,7 @@
           </p>
           <NuxtLink
             class="btn btn-ghost border-2 border-base-content/20"
-            to="/catalog"
+            to="/products"
             >Перейти в каталог</NuxtLink
           >
         </div>
