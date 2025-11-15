@@ -5,18 +5,7 @@ declare const process: { env: Record<string, string | undefined> };
 export default defineNuxtConfig({
   srcDir: "app",
   compatibilityDate: "2025-07-15",
-  app: {
-    head: {
-      script: [
-        {
-          key: "theme-init",
-          tagPosition: "head",
-          innerHTML:
-            '(function(){try{var theme=localStorage.getItem("theme");if(theme){document.documentElement.setAttribute("data-theme", theme);}else if(!document.documentElement.getAttribute("data-theme")){document.documentElement.setAttribute("data-theme","caramellatte");}}catch(e){}})();',
-        },
-      ],
-    },
-  },
+  // theme is handled via cookies and SSR in app.vue; no inline head script needed
   devtools: {
     enabled: true,
 

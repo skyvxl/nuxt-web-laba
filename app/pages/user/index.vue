@@ -2,12 +2,46 @@
   <ClientOnly>
     <template #fallback>
       <div class="container mx-auto px-4 py-8">
-        <div class="max-w-4xl mx-auto space-y-4">
+        <div class="max-w-4xl mx-auto space-y-6">
           <div class="skeleton h-10 w-1/3" />
+
           <div class="card bg-base-100 shadow-xl">
-            <div class="card-body space-y-4">
-              <div class="skeleton h-6 w-1/2" />
-              <div class="skeleton h-32 w-full" />
+            <div class="card-body">
+              <div class="skeleton h-6 w-1/3 mb-6" />
+              <div
+                class="flex items-center gap-6 mb-6 pb-6 border-b border-base-300"
+              >
+                <div class="skeleton rounded-full w-24 h-24" />
+                <div class="flex-1">
+                  <div class="skeleton h-6 w-1/3 mb-2" />
+                  <div class="skeleton h-4 w-1/2" />
+                  <div class="flex gap-2 mt-4">
+                    <div class="skeleton h-8 w-32" />
+                    <div class="skeleton h-8 w-24" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="skeleton h-12 w-full" />
+                <div class="skeleton h-12 w-full" />
+                <div class="skeleton h-12 w-full" />
+                <div class="skeleton h-12 w-full" />
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <div class="skeleton h-6 w-1/3 mb-4" />
+              <div class="skeleton h-36 w-full" />
+            </div>
+          </div>
+
+          <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+              <div class="skeleton h-6 w-1/4 mb-4" />
+              <div class="skeleton h-10 w-40" />
             </div>
           </div>
         </div>
@@ -506,6 +540,8 @@ useHead({
   title: "Личный кабинет — DNS Магазин",
 });
 
+const themeCookie = useCookie("theme");
+
 onMounted(() => {
   try {
     const userPref = user.value?.prefs?.theme as string | undefined;
@@ -513,7 +549,7 @@ onMounted(() => {
       selectedTheme.value = userPref;
       return;
     }
-    const stored = window.localStorage.getItem("theme");
+    const stored = themeCookie.value as string | undefined;
     if (stored) selectedTheme.value = stored;
   } catch {
     /* ignore */
@@ -603,7 +639,11 @@ function applyLocalTheme(theme: string) {
   selectedTheme.value = theme;
   try {
     document.documentElement.setAttribute("data-theme", theme);
-    window.localStorage.setItem("theme", theme);
+    try {
+      themeCookie.value = theme;
+    } catch {
+      /* ignore */
+    }
   } catch {
     /* ignore */
   }

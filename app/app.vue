@@ -352,7 +352,8 @@ await check();
 
 const router = useRouter();
 const theme = ref("caramellatte");
-const hasLocalTheme = ref(false);
+const themeCookie = useCookie("theme");
+const hasLocalTheme = ref(Boolean(themeCookie.value));
 const avatarUrl = ref("");
 
 useHead(() => ({
@@ -366,27 +367,25 @@ const setDomTheme = (name: string, persist = true) => {
   try {
     document.documentElement.setAttribute("data-theme", next);
     if (persist) {
-      window.localStorage.setItem("theme", next);
+      try {
+        themeCookie.value = next;
+      } catch {
+        /* ignore cookie set errors */
+      }
     }
   } catch {
     /* ignore */
   }
 };
 
-if (import.meta.client) {
-  try {
-    const stored = window.localStorage.getItem("theme");
-    if (stored) {
-      hasLocalTheme.value = true;
-      setDomTheme(stored, false);
-    } else if (user.value?.prefs?.theme) {
-      setDomTheme(user.value.prefs.theme as string, false);
-    } else {
-      setDomTheme("caramellatte", false);
-    }
-  } catch {
-    /* ignore */
-  }
+// Initialize theme from cookie -> user prefs -> default.
+if (themeCookie.value) {
+  hasLocalTheme.value = true;
+  setDomTheme(String(themeCookie.value), false);
+} else if (user.value?.prefs?.theme) {
+  setDomTheme(user.value.prefs.theme as string, false);
+} else {
+  setDomTheme("caramellatte", false);
 }
 
 const avatarInitial = computed(() =>
@@ -427,10 +426,10 @@ const logout = async () => {
 
 onMounted(() => {
   if (!import.meta.client) return;
-  const stored = window.localStorage.getItem("theme");
+  const stored = themeCookie.value;
   if (stored) {
     hasLocalTheme.value = true;
-    setDomTheme(stored, false);
+    setDomTheme(String(stored), false);
   }
 });
 </script>
