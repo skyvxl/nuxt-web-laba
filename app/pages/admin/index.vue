@@ -50,7 +50,7 @@
           <div v-if="productsPending" class="py-10 text-center">
             <span class="loading loading-spinner" aria-label="Загрузка" />
           </div>
-          <div v-else-if="productsError" class="alert alert-error">
+          <div v-else-if="productsError" class="alert alert-soft alert-error">
             <span>{{ productsError }}</span>
           </div>
           <div v-else>

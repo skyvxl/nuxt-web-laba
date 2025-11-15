@@ -44,7 +44,7 @@
             />
           </div>
 
-          <div v-if="fetchError" class="alert alert-error mb-4">
+          <div v-if="fetchError" class="alert alert-soft alert-error mb-4">
             <span>{{ fetchError }}</span>
           </div>
 
@@ -133,7 +133,7 @@
 
           <div
             v-if="formStatus"
-            class="alert"
+            class="alert alert-soft"
             :class="{
               'alert-error': formStatus.type === 'error',
               'alert-success': formStatus.type === 'success',

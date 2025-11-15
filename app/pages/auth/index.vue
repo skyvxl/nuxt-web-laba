@@ -31,7 +31,7 @@
             @submit.prevent="login"
           >
             <h2 class="text-2xl font-bold text-center">Вход в аккаунт</h2>
-            <div v-if="loginErrorMsg" class="alert alert-error">
+            <div v-if="loginErrorMsg" class="alert alert-soft alert-error">
               {{ loginErrorMsg }}
             </div>
 
@@ -64,7 +64,7 @@
 
           <form v-else novalidate class="space-y-6" @submit.prevent="register">
             <h2 class="text-2xl font-bold text-center">Регистрация</h2>
-            <div v-if="registerErrorMsg" class="alert alert-error">
+            <div v-if="registerErrorMsg" class="alert alert-soft alert-error">
               {{ registerErrorMsg }}
             </div>
 

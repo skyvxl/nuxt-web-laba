@@ -434,7 +434,7 @@
 
             <div
               v-if="settingsStatus"
-              :class="['alert mt-4', settingsStatusClass]"
+              :class="['alert alert-soft mt-4', settingsStatusClass]"
             >
               <span>{{ settingsStatus }}</span>
             </div>
