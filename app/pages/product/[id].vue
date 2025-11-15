@@ -10,7 +10,7 @@
                 :src="product.image"
                 :alt="product.name"
                 class="rounded-xl w-full h-96 object-contain"
-              />
+              >
             </figure>
             <div class="space-y-4">
               <p class="text-base">{{ product.shortDescription }}</p>

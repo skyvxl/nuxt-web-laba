@@ -7,7 +7,7 @@
         :src="product.image"
         :alt="product.name"
         class="rounded-xl h-48 w-full object-contain"
-      />
+      >
     </figure>
     <div class="card-body flex-1 flex flex-col">
       <h2 class="card-title text-lg line-clamp-2">{{ product.name }}</h2>

@@ -8,7 +8,7 @@
             type="text"
             placeholder="Поиск товаров..."
             class="input input-bordered join-item w-full max-w-md"
-          />
+          >
           <button
             class="btn btn-ghost border-2 border-base-content/20 join-item"
           >

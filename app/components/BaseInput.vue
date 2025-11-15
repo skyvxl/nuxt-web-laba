@@ -18,7 +18,7 @@
       @paste="handlePaste"
       @input="handleInput"
       @blur="$emit('blur')"
-    />
+    >
     <div v-if="errors?.length" class="label">
       <span class="label-text-alt text-error">{{ errors[0] }}</span>
     </div>

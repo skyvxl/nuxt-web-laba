@@ -34,7 +34,7 @@
               class="h-8 w-8"
               width="64"
               height="64"
-            />
+            >
             <span class="truncate">DNS Магазин</span>
           </NuxtLink>
         </div>
@@ -58,7 +58,7 @@
               type="checkbox"
               :checked="theme === 'cosmicburst'"
               @change="toggleTheme"
-            />
+            >
             <svg
               class="swap-on h-6 w-6 fill-current"
               xmlns="http://www.w3.org/2000/svg"
@@ -132,7 +132,7 @@
                       :src="avatarUrl"
                       alt="User avatar"
                       class="w-full h-full object-cover"
-                    />
+                    >
                     <div
                       v-else
                       class="w-full h-full rounded-full bg-neutral text-white flex items-center justify-center font-bold"
@@ -192,7 +192,7 @@
 
       <!-- Drawer layout -->
       <div class="drawer flex-1">
-        <input id="main-drawer" type="checkbox" class="drawer-toggle" />
+        <input id="main-drawer" type="checkbox" class="drawer-toggle" >
         <div class="drawer-content flex flex-col">
           <div class="flex flex-1 min-h-0 min-w-0">
             <aside
@@ -239,17 +239,17 @@
                     src="https://brandwiki.ru/up/brands/product/210720_554.webp"
                     alt="Ситилинк"
                     class="rounded-lg w-full h-32 object-contain border-2 border-base-content/20 p-2"
-                  />
+                  >
                   <img
                     src="https://assets.turbologo.ru/blog/ru/2020/02/18162818/logo-mts-ks.png"
                     alt="МТС"
                     class="rounded-lg w-full h-32 object-contain border-2 border-base-content/20 p-2"
-                  />
+                  >
                   <img
                     src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQxcbHHqNVRXBkbzOlKy8svirKu53s24kZvg&s"
                     alt="iPhone"
                     class="rounded-lg w-full h-32 object-contain border-2 border-base-content/20 p-2"
-                  />
+                  >
                 </div>
               </div>
             </aside>

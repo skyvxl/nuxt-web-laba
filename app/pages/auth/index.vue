@@ -122,7 +122,7 @@
                   v-model="agreeConsent"
                   type="checkbox"
                   class="checkbox mr-2"
-                />
+                >
                 <span class="label-text"
                   >Согласен(а) на
                   <NuxtLink class="ml-1 link" to="/consent"
@@ -138,7 +138,7 @@
                   v-model="agreePrivacy"
                   type="checkbox"
                   class="checkbox mr-2"
-                />
+                >
                 <span class="label-text"
                   >Согласен(а) с
                   <NuxtLink class="ml-1 link" to="/privacy"
@@ -169,7 +169,21 @@
 <script setup lang="ts">
 import { parseAppError } from "~/shared/services/app-error";
 
-const { login: authLogin, register: authRegister } = useAuth();
+const {
+  login: authLogin,
+  register: authRegister,
+  user,
+  initialized,
+  check,
+} = useAuth();
+
+if (!initialized.value) {
+  await check();
+}
+
+if (user.value) {
+  await navigateTo("/user");
+}
 
 const activeTab = ref<"login" | "register">("login");
 
