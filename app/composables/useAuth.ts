@@ -21,6 +21,14 @@ function ensureSdk() {
 
 export function useAuth() {
   ensureSdk();
+  const authCookie = useCookie<string | null>("auth", {
+    sameSite: "lax",
+    path: "/",
+  });
+
+  const setAuthCookie = (value: boolean) => {
+    authCookie.value = value ? "1" : null;
+  };
 
   async function check() {
     ensureSdk();
@@ -34,8 +42,10 @@ export function useAuth() {
     try {
       const current = (await accountRef.get()) as unknown as User;
       user.value = current;
+      setAuthCookie(true);
     } catch {
       user.value = null;
+      setAuthCookie(false);
     } finally {
       initialized.value = true;
     }
@@ -82,6 +92,7 @@ export function useAuth() {
     if (!accountRef) return;
     await accountRef.deleteSession("current");
     user.value = null;
+    setAuthCookie(false);
   }
 
   async function uploadAvatar(file: File) {

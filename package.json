@@ -23,6 +23,7 @@
     "daisyui": "^5.5.3",
     "eslint": "^9.0.0",
     "imask": "^7.6.1",
+    "node-appwrite": "^20.3.0",
     "nuxt": "^4.2.1",
     "tailwindcss": "^4.1.17",
     "vue": "^3.5.24",

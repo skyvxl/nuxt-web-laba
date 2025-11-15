@@ -97,7 +97,7 @@ export function toAppwriteDocumentData(
     image: payload.image,
     shortDescription: payload.shortDescription,
     description: payload.description,
-    features: JSON.stringify(payload.features),
+    features: payload.features,
     characteristics: JSON.stringify(payload.characteristics),
   };
 }
