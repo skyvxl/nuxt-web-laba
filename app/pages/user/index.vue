@@ -39,7 +39,7 @@
             </h2>
 
             <div
-              class="border-b border-base-300 pb-6 mb-6 flex flex-col gap-6 sm:flex-row sm:items-center"
+              class="flex flex-col sm:flex-row items-center gap-6 mb-6 pb-6 border-b border-base-300"
             >
               <div
                 class="avatar placeholder rounded-full border-2 border-base-content/20"
