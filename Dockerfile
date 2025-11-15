@@ -19,4 +19,4 @@ ENV PORT=3000
 ENV HOST=0.0.0.0
 EXPOSE 3000
 COPY --from=build /app/.output ./.output
-CMD ["bun", ".output/server/index.mjs"]
+CMD ["bun", "run", "./.output/server/index.mjs"]
