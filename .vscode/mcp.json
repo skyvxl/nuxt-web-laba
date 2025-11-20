@@ -4,10 +4,14 @@
       "type": "http",
       "url": "https://nuxt.com/mcp"
     },
+    "nuxt-ui": {
+      "type": "http",
+      "url": "https://ui.nuxt.com/mcp"
+    },
     "ESLint": {
-			"type": "stdio",
-			"command": "npx",
-			"args": ["@eslint/mcp@latest"]
-		}
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@eslint/mcp@latest"]
+    }
   }
 }

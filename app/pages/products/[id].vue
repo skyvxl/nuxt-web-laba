@@ -79,6 +79,20 @@
         </div>
       </div>
     </div>
+    <div
+      v-else-if="pending"
+      class="flex min-h-[50vh] items-center justify-center"
+    >
+      <span
+        class="loading loading-spinner loading-lg"
+        aria-label="Загрузка товара"
+      />
+    </div>
+    <AppError
+      v-else-if="error"
+      :title="error.statusMessage ?? 'Произошла ошибка'"
+      :code="error.statusCode"
+    />
     <div v-else class="flex min-h-[50vh] items-center justify-center">
       <span
         class="loading loading-spinner loading-lg"
@@ -91,7 +105,22 @@
 <script setup lang="ts">
 const route = useRoute();
 const id = route.params.id as string;
-const { product } = await useProduct(id);
+const { product, error, pending } = await useProduct(id);
+
+if (error?.value) {
+  type ErrType = {
+    statusCode?: number;
+    status?: number;
+    statusMessage?: string;
+  };
+  const statusCode =
+    (error.value as ErrType)?.statusCode ??
+    (error.value as ErrType)?.status ??
+    null;
+  if (statusCode === 404) {
+    await navigateTo("/not-found");
+  }
+}
 
 if (product) {
   useHead({

@@ -60,8 +60,13 @@ export async function useProducts(filters?: ProductFilters) {
 
 export async function useProduct(id: string) {
   const key = `product-${id}`;
-  const { data, error } = await useAsyncData(key, () =>
+  const { data, error, pending, refresh } = await useAsyncData(key, () =>
     $fetch(`/api/products/${id}`)
   );
-  return { product: data.value as Product | null, error };
+  return {
+    product: data.value as Product | null,
+    error,
+    pending,
+    refresh,
+  };
 }
