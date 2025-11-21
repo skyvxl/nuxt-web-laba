@@ -1,9 +1,5 @@
 import { Client, Account, Storage, ID } from "appwrite";
 import type { User } from "~/shared/models/user";
-import {
-  ALLOWED_AVATAR_MIME_TYPES,
-  MAX_AVATAR_SIZE_BYTES,
-} from "~/shared/constants";
 
 let clientRef: Client | null = null;
 let accountRef: Account | null = null;
@@ -29,9 +25,14 @@ export function useAuth() {
     sameSite: "lax",
     path: "/",
   });
+  const userIdCookie = useCookie<string | null>("userId", {
+    sameSite: "lax",
+    path: "/",
+  });
 
   const setAuthCookie = (value: boolean) => {
     authCookie.value = value ? "1" : null;
+    if (!value) userIdCookie.value = null;
   };
 
   async function check() {
@@ -47,6 +48,8 @@ export function useAuth() {
       const current = (await accountRef.get()) as unknown as User;
       user.value = current;
       setAuthCookie(true);
+      // set userId for server endpoints
+      userIdCookie.value = current.$id ?? null;
     } catch {
       user.value = null;
       setAuthCookie(false);
@@ -97,6 +100,7 @@ export function useAuth() {
     await accountRef.deleteSession("current");
     user.value = null;
     setAuthCookie(false);
+    userIdCookie.value = null;
   }
 
   async function uploadAvatar(file: File) {

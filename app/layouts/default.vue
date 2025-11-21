@@ -78,6 +78,7 @@
               />
             </svg>
           </label>
+
           <ClientOnly>
             <template #fallback>
               <NuxtLink to="/auth" class="btn btn-ghost gap-2">
@@ -118,6 +119,33 @@
               </NuxtLink>
             </template>
             <template v-else>
+              <!-- Cart link: show only to authenticated users, displayed after avatar for swapped positions -->
+              <NuxtLink
+                v-if="user"
+                to="/cart"
+                class="btn btn-ghost gap-2 relative ml-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.2 6.04A1 1 0 006.8 21h10.4a1 1 0 00.99-.88L19 13H7z"
+                  />
+                </svg>
+                <span>Корзина</span>
+                <span
+                  v-if="totalItems > 0"
+                  class="badge badge-sm badge-primary absolute -top-1 -right-2"
+                  >{{ totalItems }}</span
+                >
+              </NuxtLink>
               <div class="dropdown dropdown-end">
                 <div
                   tabindex="0"
@@ -321,6 +349,7 @@
 </template>
 
 <script lang="ts" setup>
+import type { Ref } from "vue";
 const {
   user,
   initialized,
@@ -331,6 +360,13 @@ const {
 await check();
 
 const router = useRouter();
+const totalItems = ref(0);
+if (user.value) {
+  const cartData = await useCart();
+  watchEffect(() => {
+    totalItems.value = (cartData.totalItems as Ref<number>).value;
+  });
+}
 const catalogCategoryLinks = [
   { label: "Смартфоны", value: "Смартфоны" },
   { label: "Ноутбуки", value: "Ноутбуки" },

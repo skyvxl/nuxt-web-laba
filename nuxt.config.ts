@@ -40,6 +40,9 @@ export default defineNuxtConfig({
       appwriteProjectId: process.env.APPWRITE_PROJECT_ID,
       appwriteDatabaseId: process.env.APPWRITE_DATABASE_ID,
       appwriteProductsCollectionId: process.env.APPWRITE_PRODUCTS_COLLECTION_ID,
+      appwriteCartsCollectionId: process.env.APPWRITE_CARTS_COLLECTION_ID,
+      appwriteCartItemsCollectionId:
+        process.env.APPWRITE_CART_ITEMS_COLLECTION_ID,
       appwriteAvatarBucketId: process.env.APPWRITE_AVATAR_BUCKET_ID,
       appwriteAvatarMaxBytes: process.env.APPWRITE_AVATAR_MAX_BYTES
         ? Number(process.env.APPWRITE_AVATAR_MAX_BYTES)

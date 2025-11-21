@@ -27,6 +27,7 @@
           <button
             class="btn btn-ghost border-2 border-base-content/20 btn-sm"
             type="button"
+            @click="onAddToCart"
           >
             Купить
           </button>
@@ -43,5 +44,25 @@
 
 <script setup lang="ts">
 import type { Product } from "~/shared/models/product";
-defineProps<{ product: Product }>();
+import { useAuth } from "~/composables/useAuth";
+import { useCart } from "~/composables/useCart";
+const { product } = defineProps<{ product: Product }>();
+const { addToCart } = await useCart();
+const { user } = useAuth();
+async function onAddToCart() {
+  try {
+    if (!user.value) {
+      return navigateTo("/auth");
+    }
+    await addToCart(product.id, 1);
+    // Simple feedback for now
+    window.alert("Товар добавлен в корзину");
+  } catch (err) {
+    console.error("Failed to add to cart", err);
+    if ((err as Error).message === "Unauthorized") {
+      return navigateTo("/auth");
+    }
+    window.alert("Ошибка добавления в корзину");
+  }
+}
 </script>

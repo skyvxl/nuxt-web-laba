@@ -26,10 +26,14 @@
               <div class="flex gap-3 flex-row">
                 <button
                   class="btn btn-ghost border-2 border-base-content/20 flex-1"
+                  @click="onBuy"
                 >
                   Купить
                 </button>
-                <button class="btn btn-ghost border-2 border-base-content/20">
+                <button
+                  class="btn btn-ghost border-2 border-base-content/20"
+                  @click="onAddToCart"
+                >
                   В корзину
                 </button>
               </div>
@@ -106,6 +110,32 @@
 const route = useRoute();
 const id = route.params.id as string;
 const { product, error, pending } = await useProduct(id);
+const { user } = useAuth();
+const { addToCart } = await useCart();
+
+async function onBuy() {
+  try {
+    if (!user.value) return navigateTo("/auth");
+    await addToCart(product!.id, 1);
+    return navigateTo("/cart");
+  } catch (err) {
+    console.error("Failed to add to cart", err);
+    if ((err as Error).message === "Unauthorized") return navigateTo("/auth");
+    window.alert("Ошибка добавления в корзину");
+  }
+}
+
+async function onAddToCart() {
+  try {
+    if (!user.value) return navigateTo("/auth");
+    await addToCart(product!.id, 1);
+    window.alert("Товар добавлен в корзину");
+  } catch (err) {
+    console.error("Failed to add to cart", err);
+    if ((err as Error).message === "Unauthorized") return navigateTo("/auth");
+    window.alert("Ошибка добавления в корзину");
+  }
+}
 
 if (error?.value) {
   type ErrType = {
