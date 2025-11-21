@@ -113,6 +113,22 @@ const { product, error, pending } = await useProduct(id);
 const { user } = useAuth();
 const { addToCart } = await useCart();
 
+function showToast(message: string, type: "success" | "error" = "success") {
+  const toast = document.createElement("div");
+  toast.className = `toast toast-top toast-end z-50`;
+  toast.innerHTML = `
+    <div class="alert alert-soft alert-${
+      type === "success" ? "success" : "error"
+    }">
+      <span>${message}</span>
+    </div>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
+
 async function onBuy() {
   try {
     if (!user.value) return navigateTo("/auth");
@@ -121,7 +137,7 @@ async function onBuy() {
   } catch (err) {
     console.error("Failed to add to cart", err);
     if ((err as Error).message === "Unauthorized") return navigateTo("/auth");
-    window.alert("Ошибка добавления в корзину");
+    showToast("Ошибка добавления в корзину", "error");
   }
 }
 
@@ -129,11 +145,11 @@ async function onAddToCart() {
   try {
     if (!user.value) return navigateTo("/auth");
     await addToCart(product!.id, 1);
-    window.alert("Товар добавлен в корзину");
+    showToast("Товар добавлен в корзину", "success");
   } catch (err) {
     console.error("Failed to add to cart", err);
     if ((err as Error).message === "Unauthorized") return navigateTo("/auth");
-    window.alert("Ошибка добавления в корзину");
+    showToast("Ошибка добавления в корзину", "error");
   }
 }
 
