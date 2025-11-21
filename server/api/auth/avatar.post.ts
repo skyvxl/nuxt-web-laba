@@ -1,3 +1,8 @@
+import {
+  ALLOWED_AVATAR_MIME_TYPES,
+  MAX_AVATAR_SIZE_BYTES,
+} from "@@/server/utils/constants";
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const { account, storage, ID } = createAppwriteServices();
@@ -36,14 +41,18 @@ export default defineEventHandler(async (event) => {
   const maxSize =
     (typeof config.public?.appwriteAvatarMaxBytes === "number"
       ? config.public.appwriteAvatarMaxBytes
-      : undefined) ?? 5 * 1024 * 1024; // default 5MB
+      : undefined) ?? MAX_AVATAR_SIZE_BYTES;
 
   if (fileSize && fileSize > maxSize) {
     throw createError({ statusCode: 413, statusMessage: "File too large" });
   }
 
-  const allowed = new Set(["image/jpeg", "image/png", "image/webp"]);
-  if (fileType && !allowed.has(fileType)) {
+  if (
+    fileType &&
+    !ALLOWED_AVATAR_MIME_TYPES.includes(
+      fileType as (typeof ALLOWED_AVATAR_MIME_TYPES)[number]
+    )
+  ) {
     throw createError({
       statusCode: 415,
       statusMessage: "Unsupported media type",

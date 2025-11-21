@@ -142,7 +142,7 @@
                 <span class="label-text"
                   >Согласен(а) с
                   <NuxtLink class="ml-1 link" to="/privacy"
-                    >полиской конфиденциальности</NuxtLink
+                    >политикой конфиденциальности</NuxtLink
                   ></span
                 >
               </label>

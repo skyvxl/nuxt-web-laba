@@ -19,17 +19,32 @@
     </section>
 
     <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <article
-        v-for="card in statCards"
-        :key="card.label"
-        class="card bg-base-100 shadow-lg"
-      >
-        <div class="card-body">
-          <p class="text-sm text-base-content/60">{{ card.label }}</p>
-          <p class="text-4xl font-bold">{{ card.value }}</p>
-          <p class="text-xs text-base-content/50">{{ card.helper }}</p>
-        </div>
-      </article>
+      <ClientOnly>
+        <article
+          v-for="card in statCards"
+          :key="card.label"
+          class="card bg-base-100 shadow-lg"
+        >
+          <div class="card-body">
+            <p class="text-sm text-base-content/60">{{ card.label }}</p>
+            <p class="text-4xl font-bold">{{ card.value }}</p>
+            <p class="text-xs text-base-content/50">{{ card.helper }}</p>
+          </div>
+        </article>
+        <template #fallback>
+          <article
+            v-for="i in 4"
+            :key="`skeleton-${i}`"
+            class="card bg-base-100 shadow-lg"
+          >
+            <div class="card-body">
+              <p class="text-sm text-base-content/60">Загрузка...</p>
+              <p class="text-4xl font-bold">—</p>
+              <p class="text-xs text-base-content/50">Ожидание данных</p>
+            </div>
+          </article>
+        </template>
+      </ClientOnly>
     </section>
 
     <section class="grid gap-6 xl:grid-cols-3">
@@ -47,46 +62,53 @@
             >
           </div>
 
-          <div v-if="productsPending" class="py-10 text-center">
-            <span class="loading loading-spinner" aria-label="Загрузка" />
-          </div>
-          <div v-else-if="productsError" class="alert alert-soft alert-error">
-            <span>{{ productsError }}</span>
-          </div>
-          <div v-else>
-            <div
-              v-if="!latestProducts.length"
-              class="py-8 text-center text-base-content/70"
-            >
-              Пока нет товаров — создайте первый.
+          <ClientOnly>
+            <div v-if="productsPending" class="py-10 text-center">
+              <span class="loading loading-spinner" aria-label="Загрузка" />
             </div>
-            <div v-else class="overflow-x-auto">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Название</th>
-                    <th>Категория</th>
-                    <th class="text-right">Цена</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="product in latestProducts" :key="product.id">
-                    <td class="font-semibold">{{ product.name }}</td>
-                    <td>{{ product.category }}</td>
-                    <td class="text-right">
-                      {{ formatPrice(product.price) }}
-                      <span
-                        v-if="product.oldPrice"
-                        class="block text-xs text-base-content/60 line-through"
-                      >
-                        {{ formatPrice(product.oldPrice) }}
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div v-else-if="productsError" class="alert alert-soft alert-error">
+              <span>{{ productsError }}</span>
             </div>
-          </div>
+            <div v-else>
+              <div
+                v-if="!latestProducts.length"
+                class="py-8 text-center text-base-content/70"
+              >
+                Пока нет товаров — создайте первый.
+              </div>
+              <div v-else class="overflow-x-auto">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Название</th>
+                      <th>Категория</th>
+                      <th class="text-right">Цена</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="product in latestProducts" :key="product.id">
+                      <td class="font-semibold">{{ product.name }}</td>
+                      <td>{{ product.category }}</td>
+                      <td class="text-right">
+                        {{ formatPrice(product.price) }}
+                        <span
+                          v-if="product.oldPrice"
+                          class="block text-xs text-base-content/60 line-through"
+                        >
+                          {{ formatPrice(product.oldPrice) }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <template #fallback>
+              <div class="py-10 text-center">
+                <span class="loading loading-spinner" aria-label="Загрузка" />
+              </div>
+            </template>
+          </ClientOnly>
         </div>
       </article>
 
@@ -130,7 +152,11 @@ const fetchStats = () => $fetch<AdminStatsResponse>("/api/admin/stats");
 
 const { data: statsData, pending: statsPending } = await useAsyncData(
   "admin-stats",
-  fetchStats
+  fetchStats,
+  {
+    server: false, // Fetch only on client to ensure cookies are sent
+    lazy: false,
+  }
 );
 
 const statCards = computed(() => {
@@ -166,8 +192,12 @@ const {
   data: productsData,
   pending: productsPending,
   error: productsErrorRaw,
-} = await useAsyncData("admin-dashboard-products", () =>
-  $fetch("/api/products")
+} = await useAsyncData(
+  "admin-dashboard-products",
+  () => $fetch("/api/products"),
+  {
+    server: false, // Fetch on client to ensure proper rendering
+  }
 );
 
 const productsError = computed(

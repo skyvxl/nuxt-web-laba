@@ -1,3 +1,5 @@
+import { handleServerError } from "../utils/errors";
+
 export default defineEventHandler(async (event) => {
   const body = await readBody<Record<string, unknown> | null>(event);
   const normalized = normalizeProductPayload(body || {});
@@ -18,10 +20,9 @@ export default defineEventHandler(async (event) => {
       id: (created as unknown as Record<string, unknown>).$id,
     };
   } catch (error) {
-    console.error("Failed to create product", error);
-    throw createError({
+    handleServerError(error, "products.post", {
       statusCode: 500,
-      statusMessage: "Failed to create product",
+      publicMessage: "Не удалось создать товар",
     });
   }
 });

@@ -32,23 +32,18 @@ export default defineNuxtConfig({
     dirs: ["composables"],
   },
   runtimeConfig: {
+    // Server-only keys (never exposed to client)
+    appwriteApiKey: process.env.APPWRITE_API_KEY,
+
     public: {
-      appwriteEndpoint:
-        process.env.APPWRITE_ENDPOINT || "***REMOVED_ENDPOINT***",
-      appwriteProjectId:
-        process.env.APPWRITE_PROJECT_ID || "***REMOVED_PROJECT_ID***",
-      appwriteDatabaseId:
-        process.env.APPWRITE_DATABASE_ID || "***REMOVED_DATABASE_ID***",
-      appwriteProductsCollectionId:
-        process.env.APPWRITE_PRODUCTS_COLLECTION_ID || "id",
-      appwriteAvatarBucketId:
-        process.env.APPWRITE_AVATAR_BUCKET_ID || "***REMOVED_BUCKET_ID***",
+      appwriteEndpoint: process.env.APPWRITE_ENDPOINT,
+      appwriteProjectId: process.env.APPWRITE_PROJECT_ID,
+      appwriteDatabaseId: process.env.APPWRITE_DATABASE_ID,
+      appwriteProductsCollectionId: process.env.APPWRITE_PRODUCTS_COLLECTION_ID,
+      appwriteAvatarBucketId: process.env.APPWRITE_AVATAR_BUCKET_ID,
       appwriteAvatarMaxBytes: process.env.APPWRITE_AVATAR_MAX_BYTES
         ? Number(process.env.APPWRITE_AVATAR_MAX_BYTES)
         : 5 * 1024 * 1024,
-      appwriteApiKey:
-        process.env.APPWRITE_API_KEY ||
-        "***REMOVED_API_KEY***",
       siteUrl: process.env.SITE_URL || "",
     },
   },

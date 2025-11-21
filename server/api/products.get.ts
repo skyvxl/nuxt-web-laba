@@ -1,4 +1,6 @@
 import type { H3Event } from "h3";
+import { Query } from "node-appwrite";
+
 interface NormalizedProduct {
   id?: string;
   name?: string;
@@ -16,14 +18,22 @@ export default defineEventHandler(async (event: H3Event) => {
   const { databases } = createAppwriteServices();
   const config = useRuntimeConfig();
   const query = getQuery(event);
+
+  // Pagination parameters
+  const page = Math.max(1, Number(query.page) || 1);
+  const limit = Math.min(Math.max(1, Number(query.limit) || 50), 100); // Max 100 items per page
+  const offset = (page - 1) * limit;
+
   const searchTermRaw = typeof query.q === "string" ? query.q.trim() : "";
   const searchTerm = searchTermRaw.toLowerCase();
   const categoriesFilter = normalizeCategories(query.categories);
 
   try {
+    // Fetch documents with pagination
     const response = await databases.listDocuments(
       config.public.appwriteDatabaseId,
-      config.public.appwriteProductsCollectionId
+      config.public.appwriteProductsCollectionId,
+      [Query.limit(limit), Query.offset(offset)]
     );
 
     const categorySet = new Set<string>();
@@ -55,15 +65,21 @@ export default defineEventHandler(async (event: H3Event) => {
       availableCategories: Array.from(categorySet).sort((a, b) =>
         a.localeCompare(b, "ru")
       ),
+      pagination: {
+        page,
+        limit,
+        offset,
+        total: response.total,
+        hasMore: offset + results.length < response.total,
+      },
     };
   } catch (err) {
-    // On server errors, return empty array with code for debugging
-    console.warn("Failed to load products", err);
-    return {
-      products: [],
-      availableCategories: [],
-      error: String(err),
-    };
+    // Log detailed error on server, return generic message to client
+    console.error("Failed to load products:", err);
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Не удалось загрузить товары",
+    });
   }
 });
 

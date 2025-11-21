@@ -1,5 +1,9 @@
 import { Client, Account, Storage, ID } from "appwrite";
 import type { User } from "~/shared/models/user";
+import {
+  ALLOWED_AVATAR_MIME_TYPES,
+  MAX_AVATAR_SIZE_BYTES,
+} from "~/shared/constants";
 
 let clientRef: Client | null = null;
 let accountRef: Account | null = null;
@@ -102,10 +106,15 @@ export function useAuth() {
     const config = useRuntimeConfig();
     const maxBytes =
       (config.public.appwriteAvatarMaxBytes as number | undefined) ??
-      5 * 1024 * 1024;
+      MAX_AVATAR_SIZE_BYTES;
     if (file.size > maxBytes) throw new Error("file_too_large");
-    const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (!allowed.includes(file.type)) throw new Error("file_type");
+    if (
+      !ALLOWED_AVATAR_MIME_TYPES.includes(
+        file.type as (typeof ALLOWED_AVATAR_MIME_TYPES)[number]
+      )
+    ) {
+      throw new Error("file_type");
+    }
 
     const bucketId = config.public.appwriteAvatarBucketId;
     const previousFileId = user.value?.prefs?.avatarFileId as
