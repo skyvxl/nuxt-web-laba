@@ -63,7 +63,9 @@ export function isH3Error(error: unknown): boolean {
     error !== null &&
     typeof error === "object" &&
     "statusCode" in error &&
-    "statusMessage" in error
+    "statusMessage" in error &&
+    typeof (error as { statusCode: unknown }).statusCode === "number" &&
+    typeof (error as { statusMessage: unknown }).statusMessage === "string"
   );
 }
 
