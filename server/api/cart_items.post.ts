@@ -123,9 +123,9 @@ export default defineEventHandler(async (event) => {
         fixedPrice: Number(doc.fixedPrice ?? 0),
       };
     });
-    const totalItems = items.reduce((sum, it) => sum + (it.quantity || 0), 0);
+    const totalItems = items.reduce((sum, it) => sum + it.quantity, 0);
     const totalPrice = items.reduce(
-      (sum, it) => sum + (it.quantity || 0) * (it.fixedPrice || 0),
+      (sum, it) => sum + it.quantity * it.fixedPrice,
       0
     );
 
