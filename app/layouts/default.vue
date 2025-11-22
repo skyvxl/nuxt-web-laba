@@ -349,7 +349,6 @@
 </template>
 
 <script lang="ts" setup>
-import type { Ref } from "vue";
 const {
   user,
   initialized,
@@ -374,7 +373,7 @@ watch(
     if (newUser) {
       const cartData = await useCart();
       stopCartWatcher = watchEffect(() => {
-        totalItems.value = (cartData.totalItems as Ref<number>).value;
+        totalItems.value = cartData.totalItems.value;
       });
     } else {
       totalItems.value = 0;
