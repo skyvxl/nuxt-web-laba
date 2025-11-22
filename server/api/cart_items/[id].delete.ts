@@ -67,6 +67,17 @@ export default defineEventHandler(async (event) => {
 
     return { id };
   } catch (error) {
+    // Re-throw known errors (401, 403, etc.) with their original status codes
+    if (
+      error &&
+      typeof error === "object" &&
+      "statusCode" in error &&
+      "statusMessage" in error
+    ) {
+      throw error;
+    }
+    
+    // Only unexpected errors should be wrapped as 500
     console.error("Failed to delete cart item", error);
     throw createError({
       statusCode: 500,
