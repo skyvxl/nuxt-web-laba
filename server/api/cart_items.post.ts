@@ -6,6 +6,7 @@ export default defineEventHandler(async (event) => {
   const productId = validateString(body?.productId, "productId");
   const quantity = validateNumber(body?.quantity ?? 1, "quantity", {
     min: 1,
+    max: 999,
   }) as number;
 
   const { databases, ID } = createAppwriteServices();
