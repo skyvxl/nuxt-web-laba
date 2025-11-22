@@ -1,5 +1,5 @@
 <template>
-  <div
+  <article
     class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow h-full flex flex-col"
   >
     <figure class="px-4 pt-4">
@@ -27,6 +27,7 @@
           <button
             class="btn btn-ghost border-2 border-base-content/20 btn-sm"
             type="button"
+            @click="onAddToCart"
           >
             Купить
           </button>
@@ -38,10 +39,29 @@
         </div>
       </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup lang="ts">
 import type { Product } from "~/shared/models/product";
-defineProps<{ product: Product }>();
+const { product } = defineProps<{ product: Product }>();
+const { addToCart } = await useCart();
+const { user } = useAuth();
+const { showToast } = useToast();
+
+async function onAddToCart() {
+  try {
+    if (!user.value) {
+      return navigateTo("/auth");
+    }
+    await addToCart(product.id, 1);
+    showToast("Товар добавлен в корзину", "success");
+  } catch (err) {
+    console.error("Failed to add to cart", err);
+    if ((err as Error).message === "Unauthorized") {
+      return navigateTo("/auth");
+    }
+    showToast("Ошибка добавления в корзину", "error");
+  }
+}
 </script>

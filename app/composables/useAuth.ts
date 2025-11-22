@@ -1,9 +1,5 @@
 import { Client, Account, Storage, ID } from "appwrite";
 import type { User } from "~/shared/models/user";
-import {
-  ALLOWED_AVATAR_MIME_TYPES,
-  MAX_AVATAR_SIZE_BYTES,
-} from "~/shared/constants";
 
 let clientRef: Client | null = null;
 let accountRef: Account | null = null;

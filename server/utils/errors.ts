@@ -4,6 +4,14 @@ interface SafeErrorOptions {
   logDetails?: boolean;
 }
 
+/**
+ * H3 Error interface
+ */
+export interface H3Error {
+  statusCode: number;
+  statusMessage: string;
+}
+
 export function handleServerError(
   error: unknown,
   context: string,
@@ -53,6 +61,20 @@ export function sanitizeErrorMessage(error: unknown): string {
   }
 
   return "Произошла ошибка";
+}
+
+/**
+ * Check if an error is an H3 error with statusCode and statusMessage
+ */
+export function isH3Error(error: unknown): error is H3Error {
+  return (
+    error !== null &&
+    typeof error === "object" &&
+    "statusCode" in error &&
+    "statusMessage" in error &&
+    typeof (error as { statusCode: unknown }).statusCode === "number" &&
+    typeof (error as { statusMessage: unknown }).statusMessage === "string"
+  );
 }
 
 /**
