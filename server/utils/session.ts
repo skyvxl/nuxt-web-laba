@@ -40,8 +40,12 @@ export async function getAuthenticatedUserId(
     }
 
     return user.$id;
-  } catch {
+  } catch (error) {
     // If there's an error getting the user (e.g., invalid session), treat as unauthorized
+    // Log the error for debugging purposes
+    if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode !== 401) {
+      console.error('Unexpected error during session validation:', error);
+    }
     if (required) {
       throw createError({
         statusCode: 401,
