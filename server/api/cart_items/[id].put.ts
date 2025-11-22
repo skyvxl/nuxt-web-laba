@@ -7,6 +7,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<Record<string, unknown> | null>(event);
   const quantity = validateNumber(body?.quantity, "quantity", {
     min: 1,
+    max: 999,
   }) as number;
 
   const { databases } = createAppwriteServices();
