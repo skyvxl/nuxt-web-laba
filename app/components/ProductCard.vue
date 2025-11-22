@@ -1,5 +1,5 @@
 <template>
-  <div
+  <article
     class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow h-full flex flex-col"
   >
     <figure class="px-4 pt-4">
@@ -39,7 +39,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup lang="ts">

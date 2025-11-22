@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-base-200 flex flex-col overflow-x-hidden">
     <template v-if="initialized">
       <!-- Top Navbar -->
-      <div class="navbar bg-base-100 border-b">
+      <header class="navbar bg-base-100 border-b">
         <div class="navbar-start">
           <label
             for="main-drawer"
@@ -38,7 +38,7 @@
             <span class="truncate">DNS Магазин</span>
           </NuxtLink>
         </div>
-        <div class="navbar-center hidden lg:flex">
+        <nav class="navbar-center hidden lg:flex">
           <ul class="menu menu-horizontal px-1">
             <li><NuxtLink to="/" class="btn btn-ghost">Главная</NuxtLink></li>
             <li>
@@ -51,7 +51,7 @@
               <NuxtLink to="/contacts" class="btn btn-ghost">Контакты</NuxtLink>
             </li>
           </ul>
-        </div>
+        </nav>
         <div class="navbar-end items-center gap-3">
           <label class="swap swap-rotate" aria-label="Переключить тему">
             <input
@@ -216,7 +216,7 @@
             </template>
           </ClientOnly>
         </div>
-      </div>
+      </header>
 
       <!-- Drawer layout -->
       <div class="drawer flex-1">
@@ -323,7 +323,7 @@
         </div>
       </div>
 
-      <div class="navbar bg-base-100 border-t mt-0 justify-center">
+      <footer class="navbar bg-base-100 border-t mt-0 justify-center">
         <div class="flex flex-wrap items-center gap-4 text-center sm:text-left">
           <span class="text-xs text-base-content"
             >&copy; 2025 DNS. Все права защищены</span
@@ -335,7 +335,7 @@
             >Политика конфиденциальности</NuxtLink
           >
         </div>
-      </div>
+      </footer>
     </template>
     <template v-else>
       <div class="flex justify-center items-center flex-1 min-h-screen">
