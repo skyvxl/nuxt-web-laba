@@ -14,9 +14,7 @@ export default defineEventHandler(async (event) => {
 
   // Must be logged in
   try {
-    const userId = getCookie(event, "userId") as string | undefined | null;
-    if (!userId)
-      throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+    const userId = await getAuthenticatedUserId(event, true);
 
     // Fetch product
     const product = await databases.getDocument(
