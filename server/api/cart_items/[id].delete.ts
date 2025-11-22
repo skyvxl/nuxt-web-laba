@@ -1,4 +1,5 @@
 import { Query } from "node-appwrite";
+import { isH3Error } from "../../utils/errors";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -67,6 +68,12 @@ export default defineEventHandler(async (event) => {
 
     return { id };
   } catch (error) {
+    // Re-throw known errors (401, 403, etc.) with their original status codes
+    if (isH3Error(error)) {
+      throw error;
+    }
+    
+    // Only unexpected errors should be wrapped as 500
     console.error("Failed to delete cart item", error);
     throw createError({
       statusCode: 500,
