@@ -12,6 +12,14 @@ import type { Models } from "node-appwrite";
  */
 export async function getAuthenticatedUserId(
   event: H3Event,
+  required: true
+): Promise<string>;
+export async function getAuthenticatedUserId(
+  event: H3Event,
+  required: false
+): Promise<string | null>;
+export async function getAuthenticatedUserId(
+  event: H3Event,
   required: boolean = true
 ): Promise<string | null> {
   const { account } = createAppwriteServices();
