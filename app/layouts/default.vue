@@ -361,12 +361,27 @@ await check();
 
 const router = useRouter();
 const totalItems = ref(0);
-if (user.value) {
-  const cartData = await useCart();
-  watchEffect(() => {
-    totalItems.value = (cartData.totalItems as Ref<number>).value;
-  });
-}
+
+let stopCartWatcher: (() => void) | null = null;
+
+watch(
+  () => user.value,
+  async (newUser) => {
+    if (stopCartWatcher) {
+      stopCartWatcher();
+      stopCartWatcher = null;
+    }
+    if (newUser) {
+      const cartData = await useCart();
+      stopCartWatcher = watchEffect(() => {
+        totalItems.value = (cartData.totalItems as Ref<number>).value;
+      });
+    } else {
+      totalItems.value = 0;
+    }
+  },
+  { immediate: true }
+);
 const catalogCategoryLinks = [
   { label: "Смартфоны", value: "Смартфоны" },
   { label: "Ноутбуки", value: "Ноутбуки" },
