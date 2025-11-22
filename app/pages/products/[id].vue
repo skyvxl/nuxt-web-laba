@@ -112,22 +112,7 @@ const id = route.params.id as string;
 const { product, error, pending } = await useProduct(id);
 const { user } = useAuth();
 const { addToCart } = await useCart();
-
-function showToast(message: string, type: "success" | "error" = "success") {
-  const toast = document.createElement("div");
-  toast.className = `toast toast-top toast-end z-50`;
-  toast.innerHTML = `
-    <div class="alert alert-soft alert-${
-      type === "success" ? "success" : "error"
-    }">
-      <span>${message}</span>
-    </div>
-  `;
-  document.body.appendChild(toast);
-  setTimeout(() => {
-    toast.remove();
-  }, 3000);
-}
+const { showToast } = useToast();
 
 async function onBuy() {
   try {
