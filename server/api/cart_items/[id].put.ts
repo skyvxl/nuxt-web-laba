@@ -61,9 +61,16 @@ export default defineEventHandler(async (event) => {
           fixedPrice: Number(doc.fixedPrice ?? 0),
           cartId: String(doc.cartId),
         };
-      })
-      .filter((it) => it.cartId === cartId);
+      });
 
+    // Warn if any items have an unexpected cartId (should not happen)
+    const unexpected = items.filter((it) => it.cartId !== cartId);
+    if (unexpected.length > 0) {
+      console.warn(
+        `Unexpected cartId(s) found in cart_items query for cartId=${cartId}:`,
+        unexpected
+      );
+    }
     const totalItems = items.reduce((sum, it) => sum + it.quantity, 0);
     const totalPrice = items.reduce(
       (sum, it) => sum + it.quantity * it.fixedPrice,
