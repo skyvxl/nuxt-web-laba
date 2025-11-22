@@ -1,5 +1,5 @@
 import { Query } from "node-appwrite";
-import { validateNumber, validateString } from "../utils/errors";
+import { validateNumber, validateString, isH3Error } from "../utils/errors";
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<Record<string, unknown> | null>(event);
@@ -140,6 +140,12 @@ export default defineEventHandler(async (event) => {
 
     return { id: itemId };
   } catch (error) {
+    // Re-throw known errors (401, 400, etc.) with their original status codes
+    if (isH3Error(error)) {
+      throw error;
+    }
+    
+    // Only unexpected errors should be wrapped as 500
     console.error("Failed to add item to cart", error);
     throw createError({
       statusCode: 500,

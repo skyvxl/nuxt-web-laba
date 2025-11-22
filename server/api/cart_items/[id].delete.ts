@@ -1,4 +1,5 @@
 import { Query } from "node-appwrite";
+import { isH3Error } from "../../utils/errors";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -68,12 +69,7 @@ export default defineEventHandler(async (event) => {
     return { id };
   } catch (error) {
     // Re-throw known errors (401, 403, etc.) with their original status codes
-    if (
-      error &&
-      typeof error === "object" &&
-      "statusCode" in error &&
-      "statusMessage" in error
-    ) {
+    if (isH3Error(error)) {
       throw error;
     }
     

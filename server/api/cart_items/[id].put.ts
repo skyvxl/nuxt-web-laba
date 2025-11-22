@@ -1,5 +1,5 @@
 import { Query } from "node-appwrite";
-import { validateNumber } from "../../utils/errors";
+import { validateNumber, isH3Error } from "../../utils/errors";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -87,6 +87,12 @@ export default defineEventHandler(async (event) => {
 
     return { id: String((updated as unknown as Record<string, unknown>).$id) };
   } catch (error) {
+    // Re-throw known errors (401, 403, etc.) with their original status codes
+    if (isH3Error(error)) {
+      throw error;
+    }
+    
+    // Only unexpected errors should be wrapped as 500
     console.error("Failed to update cart item", error);
     throw createError({
       statusCode: 500,

@@ -56,6 +56,18 @@ export function sanitizeErrorMessage(error: unknown): string {
 }
 
 /**
+ * Check if an error is an H3 error with statusCode and statusMessage
+ */
+export function isH3Error(error: unknown): boolean {
+  return (
+    error !== null &&
+    typeof error === "object" &&
+    "statusCode" in error &&
+    "statusMessage" in error
+  );
+}
+
+/**
  * Validate and sanitize user input
  */
 export function validateString(
