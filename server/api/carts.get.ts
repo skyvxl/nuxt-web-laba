@@ -4,7 +4,7 @@ export default defineEventHandler(async (_event) => {
   const { databases } = createAppwriteServices();
   const config = useRuntimeConfig();
   try {
-    const userId = getCookie(_event, "userId") as string | undefined | null;
+    const userId = await getAuthenticatedUserId(_event, false);
     if (!userId) return { cart: null };
 
     const cartsResp = await databases.listDocuments(

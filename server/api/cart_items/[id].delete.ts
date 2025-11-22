@@ -8,9 +8,7 @@ export default defineEventHandler(async (event) => {
   const { databases } = createAppwriteServices();
   const config = useRuntimeConfig();
   try {
-    const userId = getCookie(event, "userId") as string | undefined | null;
-    if (!userId)
-      throw createError({ statusCode: 401, statusMessage: "Unauthorized" });
+    const userId = await getAuthenticatedUserId(event, true);
 
     const item = await databases.getDocument(
       config.public.appwriteDatabaseId,
