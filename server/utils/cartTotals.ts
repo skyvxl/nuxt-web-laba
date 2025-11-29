@@ -78,7 +78,7 @@ async function fetchAllCartItems(
 ): Promise<CartItem[]> {
   const items: CartItem[] = [];
   let offset = 0;
-  const batchSize = 1000;
+  const batchSize = 100;
 
   while (true) {
     const response = await databases.listDocuments(
