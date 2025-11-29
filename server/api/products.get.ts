@@ -22,55 +22,58 @@ export default defineEventHandler(async (event: H3Event) => {
   // Pagination parameters
   const page = Math.max(1, Number(query.page) || 1);
   const limit = Math.min(Math.max(1, Number(query.limit) || 50), 100); // Max 100 items per page
-  const offset = (page - 1) * limit;
 
   const searchTermRaw = typeof query.q === "string" ? query.q.trim() : "";
   const searchTerm = searchTermRaw.toLowerCase();
   const categoriesFilter = normalizeCategories(query.categories);
+  const hasFilters = Boolean(searchTerm || categoriesFilter.length);
 
   try {
-    // Fetch documents with pagination
+    // Always fetch all products when we have filters to ensure proper filtering
+    // Otherwise use pagination for performance
     const response = await databases.listDocuments(
       config.public.appwriteDatabaseId,
       config.public.appwriteProductsCollectionId,
-      [Query.limit(limit), Query.offset(offset)]
+      hasFilters
+        ? [Query.limit(1000)]
+        : [Query.limit(limit), Query.offset((page - 1) * limit)]
     );
 
-    const categorySet = new Set<string>();
+    const allCategorySet = new Set<string>();
     const mappedProducts: NormalizedProduct[] = (response.documents || []).map(
       (doc: unknown) => {
         const data = doc as unknown as Record<string, unknown>;
         const product = normalizeProductDocument(data, doc);
         if (product.category) {
-          categorySet.add(String(product.category));
+          allCategorySet.add(String(product.category));
         }
         return product;
       }
     );
 
-    const filteredByCategory = categoriesFilter.length
-      ? mappedProducts.filter((product) =>
-          categoriesFilter.includes(
-            String(product.category || "").toLowerCase()
-          )
-        )
-      : mappedProducts;
+    // Apply filters
+    let results = mappedProducts;
 
-    const results = searchTerm
-      ? applyFuzzySearch(filteredByCategory, searchTerm)
-      : filteredByCategory;
+    if (categoriesFilter.length) {
+      results = results.filter((product) =>
+        categoriesFilter.includes(String(product.category || "").toLowerCase())
+      );
+    }
+
+    if (searchTerm) {
+      results = applyFuzzySearch(results, searchTerm);
+    }
 
     return {
       products: results,
-      availableCategories: Array.from(categorySet).sort((a, b) =>
+      availableCategories: Array.from(allCategorySet).sort((a, b) =>
         a.localeCompare(b, "ru")
       ),
       pagination: {
         page,
         limit,
-        offset,
-        total: response.total,
-        hasMore: offset + results.length < response.total,
+        total: results.length,
+        hasMore: false,
       },
     };
   } catch (err) {
