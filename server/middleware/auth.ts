@@ -1,5 +1,7 @@
 export default defineEventHandler(async (event) => {
-  const path = event.path;
+  // Remove query string for path matching
+  const fullPath = event.path;
+  const path = fullPath.split("?")[0];
 
   if (
     (!path.startsWith("/api/admin") && !path.startsWith("/api/products")) ||

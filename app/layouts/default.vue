@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-base-200 flex flex-col overflow-x-hidden">
     <template v-if="initialized">
       <!-- Top Navbar -->
-      <div class="navbar bg-base-100 border-b">
+      <header class="navbar bg-base-100 border-b">
         <div class="navbar-start">
           <label
             for="main-drawer"
@@ -38,7 +38,7 @@
             <span class="truncate">DNS Магазин</span>
           </NuxtLink>
         </div>
-        <div class="navbar-center hidden lg:flex">
+        <nav class="navbar-center hidden lg:flex">
           <ul class="menu menu-horizontal px-1">
             <li><NuxtLink to="/" class="btn btn-ghost">Главная</NuxtLink></li>
             <li>
@@ -51,7 +51,7 @@
               <NuxtLink to="/contacts" class="btn btn-ghost">Контакты</NuxtLink>
             </li>
           </ul>
-        </div>
+        </nav>
         <div class="navbar-end items-center gap-3">
           <label class="swap swap-rotate" aria-label="Переключить тему">
             <input
@@ -78,6 +78,7 @@
               />
             </svg>
           </label>
+
           <ClientOnly>
             <template #fallback>
               <NuxtLink to="/auth" class="btn btn-ghost gap-2">
@@ -118,6 +119,33 @@
               </NuxtLink>
             </template>
             <template v-else>
+              <!-- Cart link: show only to authenticated users, displayed after avatar for swapped positions -->
+              <NuxtLink
+                v-if="user"
+                to="/cart"
+                class="btn btn-ghost gap-2 relative ml-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.2 6.04A1 1 0 006.8 21h10.4a1 1 0 00.99-.88L19 13H7z"
+                  />
+                </svg>
+                <span>Корзина</span>
+                <span
+                  v-if="totalItems > 0"
+                  class="badge badge-sm badge-primary absolute -top-1 -right-2"
+                  >{{ totalItems }}</span
+                >
+              </NuxtLink>
               <div class="dropdown dropdown-end">
                 <div
                   tabindex="0"
@@ -188,7 +216,7 @@
             </template>
           </ClientOnly>
         </div>
-      </div>
+      </header>
 
       <!-- Drawer layout -->
       <div class="drawer flex-1">
@@ -295,7 +323,7 @@
         </div>
       </div>
 
-      <div class="navbar bg-base-100 border-t mt-0 justify-center">
+      <footer class="navbar bg-base-100 border-t mt-0 justify-center">
         <div class="flex flex-wrap items-center gap-4 text-center sm:text-left">
           <span class="text-xs text-base-content"
             >&copy; 2025 DNS. Все права защищены</span
@@ -307,7 +335,7 @@
             >Политика конфиденциальности</NuxtLink
           >
         </div>
-      </div>
+      </footer>
     </template>
     <template v-else>
       <div class="flex justify-center items-center flex-1 min-h-screen">
@@ -321,16 +349,29 @@
 </template>
 
 <script lang="ts" setup>
-const {
-  user,
-  initialized,
-  check,
-  logout: authLogout,
-  getAvatarUrl,
-} = useAuth();
-await check();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+
+const { user, initialized } = storeToRefs(authStore);
+
+await authStore.check();
 
 const router = useRouter();
+const totalItems = computed(() => cartStore.totalItems);
+
+// Загружаем корзину когда пользователь авторизован
+watch(
+  () => authStore.isAuthenticated,
+  async (isAuth) => {
+    if (isAuth) {
+      await cartStore.fetchCart();
+    } else {
+      cartStore.$reset();
+    }
+  },
+  { immediate: true }
+);
+
 const catalogCategoryLinks = [
   { label: "Смартфоны", value: "Смартфоны" },
   { label: "Ноутбуки", value: "Ноутбуки" },
@@ -400,13 +441,13 @@ watch(
       avatarUrl.value = "";
       return;
     }
-    avatarUrl.value = await getAvatarUrl(fileId);
+    avatarUrl.value = authStore.getAvatarUrl(fileId);
   },
   { immediate: true }
 );
 
 const logout = async () => {
-  await authLogout();
+  await authStore.logout();
   router.push("/");
 };
 

@@ -169,16 +169,11 @@
 <script setup lang="ts">
 import { parseAppError } from "~/shared/services/app-error";
 
-const {
-  login: authLogin,
-  register: authRegister,
-  user,
-  initialized,
-  check,
-} = useAuth();
+const authStore = useAuthStore();
+const { user, initialized } = storeToRefs(authStore);
 
 if (!initialized.value) {
-  await check();
+  await authStore.check();
 }
 
 if (user.value) {
@@ -230,7 +225,7 @@ async function login() {
   loginErrorMsg.value = "";
   loginLoading.value = true;
   try {
-    await authLogin(loginEmail.value, loginPassword.value);
+    await authStore.login(loginEmail.value, loginPassword.value);
     // redirect to home
     navigateTo("/");
   } catch (err) {
@@ -337,7 +332,7 @@ async function register() {
 
   registerLoading.value = true;
   try {
-    await authRegister(
+    await authStore.register(
       registerEmail.value.trim(),
       registerPassword.value,
       registerName.value,

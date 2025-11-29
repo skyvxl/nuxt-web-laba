@@ -26,10 +26,14 @@
               <div class="flex gap-3 flex-row">
                 <button
                   class="btn btn-ghost border-2 border-base-content/20 flex-1"
+                  @click="onBuy"
                 >
                   Купить
                 </button>
-                <button class="btn btn-ghost border-2 border-base-content/20">
+                <button
+                  class="btn btn-ghost border-2 border-base-content/20"
+                  @click="onAddToCart"
+                >
                   В корзину
                 </button>
               </div>
@@ -78,6 +82,23 @@
           </div>
         </div>
       </div>
+
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title">Отзывы</h2>
+          <div class="space-y-3">
+            <label class="label">
+              <span class="label-text">Ваш отзыв</span>
+            </label>
+            <textarea
+              class="textarea textarea-bordered w-full"
+              rows="4"
+              placeholder="Напишите ваш отзыв..."
+            />
+            <div class="text-sm text-base-content/70">Отзывов пока нет</div>
+          </div>
+        </div>
+      </div>
     </div>
     <div
       v-else-if="pending"
@@ -106,6 +127,34 @@
 const route = useRoute();
 const id = route.params.id as string;
 const { product, error, pending } = await useProduct(id);
+
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const toastStore = useToastStore();
+
+async function onBuy() {
+  try {
+    if (!authStore.isAuthenticated) return navigateTo("/auth");
+    await cartStore.addToCart(product!.id, 1);
+    return navigateTo("/cart");
+  } catch (err) {
+    console.error("Failed to add to cart", err);
+    if ((err as Error).message === "Unauthorized") return navigateTo("/auth");
+    toastStore.error("Ошибка добавления в корзину");
+  }
+}
+
+async function onAddToCart() {
+  try {
+    if (!authStore.isAuthenticated) return navigateTo("/auth");
+    await cartStore.addToCart(product!.id, 1);
+    toastStore.success("Товар добавлен в корзину");
+  } catch (err) {
+    console.error("Failed to add to cart", err);
+    if ((err as Error).message === "Unauthorized") return navigateTo("/auth");
+    toastStore.error("Ошибка добавления в корзину");
+  }
+}
 
 if (error?.value) {
   type ErrType = {
