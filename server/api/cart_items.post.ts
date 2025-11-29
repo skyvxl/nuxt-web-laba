@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
       productId
     );
     const productDoc = product as unknown as Record<string, unknown>;
-    const productPrice = Number(productDoc.price ?? productDoc["price"]);
+    const productPrice = Number(productDoc.price);
     if (!Number.isFinite(productPrice)) {
       throw createError({
         statusCode: 400,
