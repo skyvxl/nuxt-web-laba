@@ -49,6 +49,11 @@ export default defineNuxtConfig({
         ? Number(process.env.APPWRITE_AVATAR_MAX_BYTES)
         : 5 * 1024 * 1024,
       siteUrl: process.env.SITE_URL || "",
+      appwriteReviewsMediaBucketId:
+        process.env.APPWRITE_REVIEWS_MEDIA_BUCKET_ID,
+      appwriteReviewCollectionId: process.env.APPWRITE_REVIEW_COLLECTION_ID,
+      appwriteReviewMediaCollectionId:
+        process.env.APPWRITE_REVIEW_MEDIA_COLLECTION_ID,
     },
   },
 
