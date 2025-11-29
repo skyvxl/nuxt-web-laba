@@ -110,12 +110,36 @@ export default defineEventHandler(async (event) => {
     }
 
     // Recalculate totals
-    const allItems = await databases.listDocuments(
+    // Fetch all cart items with pagination to avoid missing items if >1000
+    async function fetchAllCartItems(databases, dbId, collectionId, cartId) {
+      const allItems: Record<string, unknown>[] = [];
+      let offset = 0;
+      const pageSize = 1000;
+      while (true) {
+        const resp = await databases.listDocuments(
+          dbId,
+          collectionId,
+          [
+            Query.equal("cartId", cartId),
+            Query.limit(pageSize),
+            Query.offset(offset),
+          ]
+        );
+        const docs = resp.documents || [];
+        allItems.push(...docs);
+        if (docs.length < pageSize) break;
+        offset += pageSize;
+      }
+      return allItems;
+    }
+
+    const allItems = await fetchAllCartItems(
+      databases,
       config.public.appwriteDatabaseId,
       config.public.appwriteCartItemsCollectionId,
-      [Query.equal("cartId", cartId), Query.limit(1000)]
+      cartId
     );
-    const items = (allItems.documents || []).map((it: unknown) => {
+    const items = (allItems || []).map((it: unknown) => {
       const doc = it as Record<string, unknown>;
       return {
         quantity: Number(doc.quantity ?? 0),
