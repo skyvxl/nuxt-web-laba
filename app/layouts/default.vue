@@ -349,38 +349,29 @@
 </template>
 
 <script lang="ts" setup>
-const {
-  user,
-  initialized,
-  check,
-  logout: authLogout,
-  getAvatarUrl,
-} = useAuth();
-await check();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+
+const { user, initialized } = storeToRefs(authStore);
+
+await authStore.check();
 
 const router = useRouter();
-const totalItems = ref(0);
+const totalItems = computed(() => cartStore.totalItems);
 
-let stopCartWatcher: (() => void) | null = null;
-
+// Загружаем корзину когда пользователь авторизован
 watch(
-  () => user.value,
-  async (newUser) => {
-    if (stopCartWatcher) {
-      stopCartWatcher();
-      stopCartWatcher = null;
-    }
-    if (newUser) {
-      const cartData = await useCart();
-      stopCartWatcher = watchEffect(() => {
-        totalItems.value = cartData.totalItems.value;
-      });
+  () => authStore.isAuthenticated,
+  async (isAuth) => {
+    if (isAuth) {
+      await cartStore.fetchCart();
     } else {
-      totalItems.value = 0;
+      cartStore.$reset();
     }
   },
   { immediate: true }
 );
+
 const catalogCategoryLinks = [
   { label: "Смартфоны", value: "Смартфоны" },
   { label: "Ноутбуки", value: "Ноутбуки" },
@@ -450,13 +441,13 @@ watch(
       avatarUrl.value = "";
       return;
     }
-    avatarUrl.value = await getAvatarUrl(fileId);
+    avatarUrl.value = authStore.getAvatarUrl(fileId);
   },
   { immediate: true }
 );
 
 const logout = async () => {
-  await authLogout();
+  await authStore.logout();
   router.push("/");
 };
 

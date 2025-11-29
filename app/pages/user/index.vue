@@ -473,31 +473,18 @@
 <script setup lang="ts">
 import { parseAppError } from "~/shared/services/app-error";
 
-const {
-  user,
-  initialized,
-  check,
-  logout: authLogout,
-  uploadAvatar,
-  deleteAvatar,
-  getAvatarUrl,
-  setPreferences,
-  updateEmail,
-  updatePassword,
-} = useAuth();
+const authStore = useAuthStore();
+const { user, initialized } = storeToRefs(authStore);
 
 if (import.meta.client && !initialized.value) {
-  await check();
+  await authStore.check();
 }
 
 const avatarUrl = ref("");
 const avatarInitial = computed(() =>
   (user.value?.name?.[0] ?? "—").toUpperCase()
 );
-const isAdmin = computed(() => {
-  const labels = user.value?.labels;
-  return Array.isArray(labels) && labels.includes("admin");
-});
+const isAdmin = computed(() => authStore.isAdmin);
 const name = computed(() => user.value?.name ?? "—");
 const email = computed(() => user.value?.email ?? "—");
 const phone = computed(() => user.value?.phone ?? "—");
@@ -521,7 +508,7 @@ watch(
       avatarUrl.value = "";
       return;
     }
-    avatarUrl.value = await getAvatarUrl(fileId);
+    avatarUrl.value = authStore.getAvatarUrl(fileId);
   },
   { immediate: true }
 );
@@ -607,7 +594,7 @@ async function onAvatarSelected(event: Event) {
   if (!file) return;
   uploadingAvatar.value = true;
   try {
-    await uploadAvatar(file);
+    await authStore.uploadAvatar(file);
     showTempStatus("avatar", "Аватар загружен", "success");
   } catch (err) {
     const parsed = parseAppError(err);
@@ -622,7 +609,7 @@ async function removeAvatar() {
   const fileId = user.value?.prefs?.avatarFileId as string | undefined;
   if (!fileId) return;
   try {
-    await deleteAvatar(fileId);
+    await authStore.deleteAvatar(fileId);
     showTempStatus("avatar", "Аватар удален");
   } catch (err) {
     const parsed = parseAppError(err);
@@ -632,7 +619,7 @@ async function removeAvatar() {
 
 async function saveThemePreference() {
   try {
-    await setPreferences({ theme: selectedTheme.value });
+    await authStore.setPreferences({ theme: selectedTheme.value });
     applyLocalTheme(selectedTheme.value);
     showTempStatus("theme", "Сохранено");
   } catch (err) {
@@ -658,7 +645,7 @@ function applyLocalTheme(theme: string) {
 async function changeEmail() {
   if (!newEmail.value || !emailPassword.value) return;
   try {
-    await updateEmail(newEmail.value.trim(), emailPassword.value);
+    await authStore.updateEmail(newEmail.value.trim(), emailPassword.value);
     showTempStatus("settings", "Email обновлен");
     newEmail.value = "";
     emailPassword.value = "";
@@ -671,7 +658,7 @@ async function changeEmail() {
 async function changePassword() {
   if (!newPassword.value || !oldPassword.value) return;
   try {
-    await updatePassword(newPassword.value, oldPassword.value);
+    await authStore.updatePassword(newPassword.value, oldPassword.value);
     showTempStatus("settings", "Пароль обновлен");
     newPassword.value = "";
     oldPassword.value = "";
@@ -682,7 +669,7 @@ async function changePassword() {
 }
 
 async function logout() {
-  await authLogout();
+  await authStore.logout();
   await navigateTo("/");
 }
 

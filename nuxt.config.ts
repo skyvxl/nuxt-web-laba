@@ -21,6 +21,7 @@ export default defineNuxtConfig({
     "@nuxt/icon",
     "@nuxt/image",
     "@nuxt/test-utils",
+    "@pinia/nuxt",
   ],
   components: [
     {
@@ -29,7 +30,7 @@ export default defineNuxtConfig({
     },
   ],
   imports: {
-    dirs: ["composables"],
+    dirs: ["composables", "stores"],
   },
   runtimeConfig: {
     // Server-only keys (never exposed to client)

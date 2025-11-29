@@ -45,23 +45,24 @@
 <script setup lang="ts">
 import type { Product } from "~/shared/models/product";
 const { product } = defineProps<{ product: Product }>();
-const { addToCart } = await useCart();
-const { user } = useAuth();
-const { showToast } = useToast();
+
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const toastStore = useToastStore();
 
 async function onAddToCart() {
   try {
-    if (!user.value) {
+    if (!authStore.isAuthenticated) {
       return navigateTo("/auth");
     }
-    await addToCart(product.id, 1);
-    showToast("Товар добавлен в корзину", "success");
+    await cartStore.addToCart(product.id, 1);
+    toastStore.success("Товар добавлен в корзину");
   } catch (err) {
     console.error("Failed to add to cart", err);
     if ((err as Error).message === "Unauthorized") {
       return navigateTo("/auth");
     }
-    showToast("Ошибка добавления в корзину", "error");
+    toastStore.error("Ошибка добавления в корзину");
   }
 }
 </script>

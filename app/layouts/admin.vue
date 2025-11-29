@@ -147,19 +147,17 @@ const navItems = [
   },
 ];
 
-const { user, initialized, check, logout: authLogout } = useAuth();
+const authStore = useAuthStore();
+const { user, initialized } = storeToRefs(authStore);
 const authStateCookie = useCookie<string | null>("auth");
 
 if (import.meta.client) {
-  await check();
+  await authStore.check();
 } else if (!authStateCookie.value) {
   await navigateTo("/", { replace: true });
 }
 
-const isAdmin = computed(() => {
-  const labels = user.value?.labels as string[] | undefined;
-  return Array.isArray(labels) && labels.includes("admin");
-});
+const isAdmin = computed(() => authStore.isAdmin);
 
 if (import.meta.client) {
   watch(
@@ -230,7 +228,7 @@ const displayName = computed(
 );
 
 const logout = async () => {
-  await authLogout();
+  await authStore.logout();
   router.push("/auth");
 };
 

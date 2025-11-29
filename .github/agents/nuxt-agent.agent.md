@@ -4,18 +4,18 @@ description: Expert Nuxt.js development agent with comprehensive knowledge of Nu
 tools:
   [
     "vscode",
-    "launch",
-    "edit",
+    "execute",
     "read",
+    "edit",
     "search",
     "web",
-    "shell",
-    "GitKraken/*",
+    "gitkraken/*",
     "context7/*",
-    "ESLint/*",
+    "appwrite-docs/*",
+    "eslint/*",
     "nuxt/*",
     "nuxt-ui/*",
-    "agents",
+    "agent",
     "todo",
   ]
 mcp-servers:

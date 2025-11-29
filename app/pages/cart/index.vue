@@ -13,6 +13,12 @@
           </p>
         </div>
         <ClientOnly>
+          <template #fallback>
+            <div class="flex items-center gap-3">
+              <span class="badge badge-primary">— товар(ов)</span>
+              <span class="text-lg font-bold">— ₽</span>
+            </div>
+          </template>
           <div class="flex items-center gap-3">
             <span class="badge badge-primary">{{ totalItems }} товар(ов)</span>
             <span class="text-lg font-bold">{{ formatPrice(totalPrice) }}</span>
@@ -20,11 +26,12 @@
         </ClientOnly>
       </div>
 
-      <div v-if="pending" class="py-12 flex justify-center">
-        <span class="loading loading-dots loading-lg" />
-      </div>
-
       <ClientOnly>
+        <template #fallback>
+          <div class="py-12 flex justify-center">
+            <span class="loading loading-dots loading-lg" />
+          </div>
+        </template>
         <div v-if="!cart || items.length === 0" class="py-12 text-center">
           <p class="text-lg mb-4">Ваша корзина пуста</p>
           <NuxtLink to="/products" class="btn btn-primary"
@@ -167,19 +174,25 @@
 </template>
 
 <script setup lang="ts">
-import { useCart } from "~/composables/useCart";
 import type { CartItem } from "~/shared/models/cartItem";
-const { cart, items, totalPrice, pending, totalItems, updateItem, removeItem } =
-  await useCart();
+
+const cartStore = useCartStore();
+
+// Загружаем корзину при монтировании
+onMounted(async () => {
+  await cartStore.fetchCart();
+});
+
+const { cart, items, totalPrice, totalItems } = storeToRefs(cartStore);
 
 const deleteModal = ref<HTMLDialogElement | null>(null);
 const itemToDelete = ref<CartItem | null>(null);
 
 function increment(item: CartItem) {
-  updateItem(item.id, item.quantity + 1);
+  cartStore.updateItem(item.id, item.quantity + 1);
 }
 function decrement(item: CartItem) {
-  if (item.quantity > 1) updateItem(item.id, item.quantity - 1);
+  if (item.quantity > 1) cartStore.updateItem(item.id, item.quantity - 1);
 }
 function remove(item: CartItem) {
   itemToDelete.value = item;
@@ -187,7 +200,7 @@ function remove(item: CartItem) {
 }
 function confirmDelete() {
   if (itemToDelete.value) {
-    removeItem(itemToDelete.value.id);
+    cartStore.removeItem(itemToDelete.value.id);
     itemToDelete.value = null;
     deleteModal.value?.close();
   }

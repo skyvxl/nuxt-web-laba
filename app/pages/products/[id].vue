@@ -127,31 +127,32 @@
 const route = useRoute();
 const id = route.params.id as string;
 const { product, error, pending } = await useProduct(id);
-const { user } = useAuth();
-const { addToCart } = await useCart();
-const { showToast } = useToast();
+
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const toastStore = useToastStore();
 
 async function onBuy() {
   try {
-    if (!user.value) return navigateTo("/auth");
-    await addToCart(product!.id, 1);
+    if (!authStore.isAuthenticated) return navigateTo("/auth");
+    await cartStore.addToCart(product!.id, 1);
     return navigateTo("/cart");
   } catch (err) {
     console.error("Failed to add to cart", err);
     if ((err as Error).message === "Unauthorized") return navigateTo("/auth");
-    showToast("Ошибка добавления в корзину", "error");
+    toastStore.error("Ошибка добавления в корзину");
   }
 }
 
 async function onAddToCart() {
   try {
-    if (!user.value) return navigateTo("/auth");
-    await addToCart(product!.id, 1);
-    showToast("Товар добавлен в корзину", "success");
+    if (!authStore.isAuthenticated) return navigateTo("/auth");
+    await cartStore.addToCart(product!.id, 1);
+    toastStore.success("Товар добавлен в корзину");
   } catch (err) {
     console.error("Failed to add to cart", err);
     if ((err as Error).message === "Unauthorized") return navigateTo("/auth");
-    showToast("Ошибка добавления в корзину", "error");
+    toastStore.error("Ошибка добавления в корзину");
   }
 }
 

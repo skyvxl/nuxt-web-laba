@@ -356,9 +356,10 @@ const requireAuth = () => {
 definePageMeta({ layout: "admin", middleware: requireAuth });
 
 const route = useRoute();
-const { initialized, check } = useAuth();
-if (!initialized.value) {
-  await check();
+const authStore = useAuthStore();
+
+if (!authStore.initialized) {
+  await authStore.check();
 }
 
 const {

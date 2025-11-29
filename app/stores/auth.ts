@@ -1,26 +1,28 @@
+import { defineStore } from "pinia";
 import { Client, Account, Storage, ID } from "appwrite";
 import type { User } from "~/shared/models/user";
 
-let clientRef: Client | null = null;
-let accountRef: Account | null = null;
-let storageRef: Storage | null = null;
+// Разрешенные MIME-типы и максимальный размер для аватара
+const ALLOWED_AVATAR_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+] as const;
+const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 
-const user = ref<User | null>(null);
-const initialized = ref(false);
+export const useAuthStore = defineStore("auth", () => {
+  // === SDK References ===
+  let clientRef: Client | null = null;
+  let accountRef: Account | null = null;
+  let storageRef: Storage | null = null;
 
-function ensureSdk() {
-  if (!import.meta.client || clientRef) return;
-  const config = useRuntimeConfig();
-  const sdk = new Client()
-    .setEndpoint(config.public.appwriteEndpoint)
-    .setProject(config.public.appwriteProjectId);
-  clientRef = sdk;
-  accountRef = new Account(sdk);
-  storageRef = new Storage(sdk);
-}
+  // === State ===
+  const user = ref<User | null>(null);
+  const initialized = ref(false);
+  const loading = ref(false);
 
-export function useAuth() {
-  ensureSdk();
+  // === Cookies ===
   const authCookie = useCookie<string | null>("auth", {
     sameSite: "lax",
     path: "/",
@@ -30,7 +32,31 @@ export function useAuth() {
     path: "/",
   });
 
-  const setAuthCookies = (currentUser: User | null) => {
+  // === Getters ===
+  const isAuthenticated = computed(() => !!user.value);
+  const userId = computed(() => user.value?.$id ?? null);
+  const userName = computed(() => user.value?.name ?? "");
+  const userEmail = computed(() => user.value?.email ?? "");
+  const isAdmin = computed(
+    () => user.value?.labels?.includes("admin") ?? false
+  );
+  const avatarFileId = computed(
+    () => (user.value?.prefs?.avatarFileId as string) ?? null
+  );
+
+  // === Internal Methods ===
+  function ensureSdk() {
+    if (!import.meta.client || clientRef) return;
+    const config = useRuntimeConfig();
+    const sdk = new Client()
+      .setEndpoint(config.public.appwriteEndpoint)
+      .setProject(config.public.appwriteProjectId);
+    clientRef = sdk;
+    accountRef = new Account(sdk);
+    storageRef = new Storage(sdk);
+  }
+
+  function setAuthCookies(currentUser: User | null) {
     if (currentUser && currentUser.$id) {
       authCookie.value = "1";
       userIdCookie.value = currentUser.$id;
@@ -38,8 +64,9 @@ export function useAuth() {
       authCookie.value = null;
       userIdCookie.value = null;
     }
-  };
+  }
 
+  // === Actions ===
   async function check() {
     ensureSdk();
     if (!import.meta.client || !accountRef) {
@@ -49,6 +76,7 @@ export function useAuth() {
       }
       return;
     }
+    loading.value = true;
     try {
       const current = (await accountRef.get()) as unknown as User;
       user.value = current;
@@ -57,6 +85,7 @@ export function useAuth() {
       user.value = null;
       setAuthCookies(null);
     } finally {
+      loading.value = false;
       initialized.value = true;
     }
   }
@@ -64,8 +93,13 @@ export function useAuth() {
   async function login(email: string, password: string) {
     ensureSdk();
     if (!accountRef) throw new Error("Appwrite account unavailable");
-    await accountRef.createEmailPasswordSession(email, password);
-    await check();
+    loading.value = true;
+    try {
+      await accountRef.createEmailPasswordSession(email, password);
+      await check();
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function register(
@@ -76,43 +110,60 @@ export function useAuth() {
   ) {
     ensureSdk();
     if (!accountRef) throw new Error("Appwrite account unavailable");
-    const created = await accountRef.create(ID.unique(), email, password, name);
-    await accountRef.createEmailPasswordSession(email, password);
-    if (phone) {
-      try {
-        const accountExt = accountRef as unknown as {
-          updatePhone?: (args: {
-            phone: string;
-            password?: string;
-          }) => Promise<unknown>;
-        };
-        if (typeof accountExt.updatePhone === "function") {
-          await accountExt.updatePhone({ phone, password });
+    loading.value = true;
+    try {
+      const created = await accountRef.create(
+        ID.unique(),
+        email,
+        password,
+        name
+      );
+      await accountRef.createEmailPasswordSession(email, password);
+      if (phone) {
+        try {
+          const accountExt = accountRef as unknown as {
+            updatePhone?: (args: {
+              phone: string;
+              password?: string;
+            }) => Promise<unknown>;
+          };
+          if (typeof accountExt.updatePhone === "function") {
+            await accountExt.updatePhone({ phone, password });
+          }
+        } catch {
+          // ignore phone errors
         }
-      } catch {
-        // ignore phone errors
       }
+      await check();
+      return created;
+    } finally {
+      loading.value = false;
     }
-    await check();
-    return created;
   }
 
   async function logout() {
     ensureSdk();
     if (!accountRef) return;
-    await accountRef.deleteSession("current");
-    user.value = null;
-    setAuthCookies(null);
+    loading.value = true;
+    try {
+      await accountRef.deleteSession("current");
+      user.value = null;
+      setAuthCookies(null);
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function uploadAvatar(file: File) {
     ensureSdk();
-    if (!storageRef || !accountRef)
+    if (!storageRef || !accountRef) {
       throw new Error("Avatar upload unavailable");
+    }
     const config = useRuntimeConfig();
     const maxBytes =
       (config.public.appwriteAvatarMaxBytes as number | undefined) ??
       MAX_AVATAR_SIZE_BYTES;
+
     if (file.size > maxBytes) throw new Error("file_too_large");
     if (
       !ALLOWED_AVATAR_MIME_TYPES.includes(
@@ -235,9 +286,26 @@ export function useAuth() {
     await check();
   }
 
+  // === SSR: Восстанавливаем состояние по куке на сервере ===
+  function $reset() {
+    user.value = null;
+    initialized.value = false;
+    loading.value = false;
+  }
+
   return {
+    // State
     user,
     initialized,
+    loading,
+    // Getters
+    isAuthenticated,
+    userId,
+    userName,
+    userEmail,
+    isAdmin,
+    avatarFileId,
+    // Actions
     check,
     login,
     register,
@@ -248,5 +316,6 @@ export function useAuth() {
     getAvatarUrl,
     updateEmail,
     updatePassword,
+    $reset,
   };
-}
+});
