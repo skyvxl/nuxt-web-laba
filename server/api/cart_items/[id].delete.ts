@@ -1,5 +1,5 @@
-import { Query } from "node-appwrite";
 import { isH3Error } from "../../utils/errors";
+import { recalculateCartTotalsWithRetry } from "../../utils/cartTotals";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
@@ -34,46 +34,12 @@ export default defineEventHandler(async (event) => {
       id
     );
 
-    // Recalculate totals
-    // Fetch all cart items in batches of 1000 to avoid missing items due to hardcoded limit
-    let all: any[] = [];
-    let offset = 0;
-    const batchSize = 1000;
-    while (true) {
-      const response = await databases.listDocuments(
-        config.public.appwriteDatabaseId,
-        config.public.appwriteCartItemsCollectionId,
-        [
-          Query.equal("cartId", cartId),
-          Query.limit(batchSize),
-          Query.offset(offset),
-        ]
-      );
-      const docs = response.documents || [];
-      all = all.concat(docs);
-      if (docs.length < batchSize) break;
-      offset += batchSize;
-    }
-    const items = all.map((it: unknown) => {
-      const doc = it as Record<string, unknown>;
-      return {
-        quantity: Number(doc.quantity ?? 0),
-        fixedPrice: Number(doc.fixedPrice ?? 0),
-      };
-    });
-    const totalItems = items.reduce((sum, it) => sum + it.quantity, 0);
-    const totalPrice = items.reduce(
-      (sum, it) => sum + it.quantity * it.fixedPrice,
-      0
-    );
-    const timestampNow = new Date().toISOString();
-
-    await databases.updateDocument(
-      config.public.appwriteDatabaseId,
-      config.public.appwriteCartsCollectionId,
-      cartId,
-      { totalItems, totalPrice, updatedAt: timestampNow }
-    );
+    // Recalculate totals with optimistic locking to prevent race conditions
+    await recalculateCartTotalsWithRetry(databases, {
+      databaseId: config.public.appwriteDatabaseId,
+      cartsCollectionId: config.public.appwriteCartsCollectionId,
+      cartItemsCollectionId: config.public.appwriteCartItemsCollectionId,
+    }, cartId);
 
     return { id };
   } catch (error) {

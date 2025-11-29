@@ -1,5 +1,6 @@
 import { Query } from "node-appwrite";
 import { validateNumber, validateString, isH3Error } from "../utils/errors";
+import { recalculateCartTotalsWithRetry } from "../utils/cartTotals";
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<Record<string, unknown> | null>(event);
@@ -109,32 +110,12 @@ export default defineEventHandler(async (event) => {
       itemId = String((createdItem as unknown as Record<string, unknown>).$id);
     }
 
-    // Recalculate totals
-    const allItems = await databases.listDocuments(
-      config.public.appwriteDatabaseId,
-      config.public.appwriteCartItemsCollectionId,
-      [Query.equal("cartId", cartId), Query.limit(1000)]
-    );
-    const items = (allItems.documents || []).map((it: unknown) => {
-      const doc = it as Record<string, unknown>;
-      return {
-        quantity: Number(doc.quantity ?? 0),
-        fixedPrice: Number(doc.fixedPrice ?? 0),
-      };
-    });
-    const totalItems = items.reduce((sum, it) => sum + it.quantity, 0);
-    const totalPrice = items.reduce(
-      (sum, it) => sum + it.quantity * it.fixedPrice,
-      0
-    );
-
-    const timestampNow = new Date().toISOString();
-    await databases.updateDocument(
-      config.public.appwriteDatabaseId,
-      config.public.appwriteCartsCollectionId,
-      cartId,
-      { totalItems, totalPrice, updatedAt: timestampNow }
-    );
+    // Recalculate totals with optimistic locking to prevent race conditions
+    await recalculateCartTotalsWithRetry(databases, {
+      databaseId: config.public.appwriteDatabaseId,
+      cartsCollectionId: config.public.appwriteCartsCollectionId,
+      cartItemsCollectionId: config.public.appwriteCartItemsCollectionId,
+    }, cartId);
 
     return { id: itemId };
   } catch (error) {
