@@ -263,17 +263,10 @@ const handleFileSelect = (event: Event) => {
       continue;
     }
 
-    // Создаём превью для изображений
+    // Создаём превью для изображений используя URL.createObjectURL
     const isImage = file.type.startsWith("image/");
     if (isImage) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        (file as File & { preview?: string }).preview = e.target
-          ?.result as string;
-        // Форсируем обновление
-        selectedFiles.value = [...selectedFiles.value];
-      };
-      reader.readAsDataURL(file);
+      (file as File & { preview?: string }).preview = URL.createObjectURL(file);
     }
 
     selectedFiles.value.push(
