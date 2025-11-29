@@ -116,10 +116,27 @@ export const useCartStore = defineStore("cart", () => {
   }
 
   async function clearCart() {
-    // Удаляем все элементы по одному
-    const itemsCopy = [...items.value];
-    for (const item of itemsCopy) {
-      await removeItem(item.id);
+    const authStore = useAuthStore();
+    if (!authStore.isAuthenticated) {
+      throw new Error("Unauthorized");
+    }
+    if (!cart.value?.id) {
+      return;
+    }
+    loading.value = true;
+    error.value = null;
+    try {
+      await $fetch(`/api/carts/${cart.value.id}/items`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      await fetchCart();
+    } catch (err) {
+      error.value =
+        err instanceof Error ? err.message : "Failed to clear cart";
+      throw err;
+    } finally {
+      loading.value = false;
     }
   }
 
