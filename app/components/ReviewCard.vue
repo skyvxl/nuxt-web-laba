@@ -105,13 +105,13 @@
         </p>
         <div class="modal-action">
           <form method="dialog">
-            <button type="button" class="btn btn-ghost">Отмена</button>
+            <button class="btn btn-ghost">Отмена</button>
           </form>
-          <button type="button" class="btn btn-error" @click="confirmDelete">Удалить</button>
+          <button class="btn btn-error" @click="confirmDelete">Удалить</button>
         </div>
       </div>
       <form method="dialog" class="modal-backdrop">
-        <button type="button" aria-label="Закрыть">Закрыть</button>
+        <button aria-label="Закрыть">close</button>
       </form>
     </dialog>
   </div>
