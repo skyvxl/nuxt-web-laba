@@ -35,14 +35,25 @@ export default defineEventHandler(async (event) => {
     );
 
     // Recalculate totals
-    const all =
-      (
-        await databases.listDocuments(
-          config.public.appwriteDatabaseId,
-          config.public.appwriteCartItemsCollectionId,
-          [Query.equal("cartId", cartId), Query.limit(1000)]
-        )
-      ).documents || [];
+    // Fetch all cart items in batches of 1000 to avoid missing items due to hardcoded limit
+    let all: any[] = [];
+    let offset = 0;
+    const batchSize = 1000;
+    while (true) {
+      const response = await databases.listDocuments(
+        config.public.appwriteDatabaseId,
+        config.public.appwriteCartItemsCollectionId,
+        [
+          Query.equal("cartId", cartId),
+          Query.limit(batchSize),
+          Query.offset(offset),
+        ]
+      );
+      const docs = response.documents || [];
+      all = all.concat(docs);
+      if (docs.length < batchSize) break;
+      offset += batchSize;
+    }
     const items = all.map((it: unknown) => {
       const doc = it as Record<string, unknown>;
       return {
