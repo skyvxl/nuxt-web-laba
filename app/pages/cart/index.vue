@@ -65,7 +65,7 @@
                         <img
                           v-if="item.productImage"
                           :src="item.productImage"
-                          alt=""
+                          :alt="item.productName || 'Product image'"
                           class="w-full h-full object-cover"
                         >
                         <div
