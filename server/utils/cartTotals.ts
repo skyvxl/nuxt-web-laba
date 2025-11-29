@@ -26,6 +26,49 @@ const MAX_RETRIES = 3;
 const BASE_RETRY_DELAY = 50;
 
 /**
+ * Checks if an error is a transient error that should be retried.
+ * Only network errors and Appwrite 409 conflict errors are considered transient.
+ */
+function isRetryableError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  
+  const message = error.message.toLowerCase();
+  const name = error.name.toLowerCase();
+  
+  // Network-related errors
+  if (
+    message.includes("network") ||
+    message.includes("timeout") ||
+    message.includes("econnreset") ||
+    message.includes("enotfound") ||
+    name.includes("fetch")
+  ) {
+    return true;
+  }
+  
+  // Appwrite conflict errors (HTTP 409)
+  if (message.includes("409") || message.includes("conflict")) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
+ * Parses a numeric value safely, returning 0 for invalid values.
+ */
+function parseNumericValue(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+/**
  * Fetches all cart items for a given cart, handling pagination.
  */
 async function fetchAllCartItems(
@@ -52,8 +95,8 @@ async function fetchAllCartItems(
     for (const doc of docs) {
       const itemDoc = doc as unknown as Record<string, unknown>;
       items.push({
-        quantity: Number(itemDoc.quantity ?? 0),
-        fixedPrice: Number(itemDoc.fixedPrice ?? 0),
+        quantity: parseNumericValue(itemDoc.quantity),
+        fixedPrice: parseNumericValue(itemDoc.fixedPrice),
       });
     }
 
@@ -102,13 +145,19 @@ async function getCartVersion(
  * This function implements a retry mechanism to handle race conditions:
  * 1. Fetch the current cart version (updatedAt timestamp)
  * 2. Fetch all cart items and calculate totals
- * 3. Attempt to update the cart
- * 4. If another request modified the cart between steps 1-3, retry
+ * 3. Check if version changed during calculation (detect concurrent modification)
+ * 4. Attempt to update the cart
+ * 5. If version changed or transient error occurred, retry with exponential backoff
  * 
  * The updatedAt field serves as a version check - if it changed between
  * reading items and updating, we know another request modified the cart.
  * 
- * @throws Error if max retries exceeded or other database errors occur
+ * Note: Appwrite does not support conditional updates or database transactions,
+ * so there's still a small window between the version check and the update
+ * where a race could occur. This is the best achievable without transaction support.
+ * The version check significantly reduces (but cannot eliminate) the race window.
+ * 
+ * @throws Error if max retries exceeded or non-transient database errors occur
  */
 export async function recalculateCartTotalsWithRetry(
   databases: Databases,
@@ -131,12 +180,18 @@ export async function recalculateCartTotalsWithRetry(
       
       if (versionBefore !== versionAfter) {
         // Cart was modified by another request, retry
-        const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        continue;
+        if (attempt < MAX_RETRIES - 1) {
+          const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        // Max retries reached due to concurrent modifications
+        throw new Error("Cart was modified by concurrent requests, max retries exceeded");
       }
 
       // Update cart totals
+      // Note: There's a small race window between the version check above and this update.
+      // This is unavoidable without Appwrite transaction/conditional update support.
       const timestampNow = new Date().toISOString();
       await databases.updateDocument(
         config.databaseId,
@@ -149,12 +204,15 @@ export async function recalculateCartTotalsWithRetry(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
       
-      // If it's a conflict/version mismatch error from Appwrite, retry
-      if (attempt < MAX_RETRIES - 1) {
+      // Only retry on transient errors (network issues, conflicts)
+      if (isRetryableError(error) && attempt < MAX_RETRIES - 1) {
         const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
+      
+      // Non-transient error or max retries reached, throw immediately
+      throw lastError;
     }
   }
 
