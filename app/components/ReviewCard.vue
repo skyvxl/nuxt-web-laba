@@ -1,6 +1,7 @@
 <template>
-  <div class="card bg-base-200 shadow-md">
-    <div class="card-body">
+  <div>
+    <div class="card bg-base-200 shadow-md">
+      <div class="card-body">
       <!-- Заголовок с рейтингом и датой -->
       <div class="flex items-start justify-between gap-4">
         <div class="flex-1">
@@ -92,7 +93,27 @@
           </div>
         </div>
       </div>
+      </div>
     </div>
+
+    <!-- Delete confirmation modal -->
+    <dialog ref="deleteModal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Удалить отзыв?</h3>
+        <p class="py-4">
+          Вы уверены, что хотите удалить этот отзыв? Это действие нельзя отменить.
+        </p>
+        <div class="modal-action">
+          <form method="dialog">
+            <button class="btn btn-ghost">Отмена</button>
+          </form>
+          <button class="btn btn-error" @click="confirmDelete">Удалить</button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button>Закрыть</button>
+      </form>
+    </dialog>
   </div>
 </template>
 
@@ -111,6 +132,9 @@ const emit = defineEmits<{
 
 const config = useRuntimeConfig();
 
+// Ref for delete confirmation modal
+const deleteModal = ref<HTMLDialogElement | null>(null);
+
 // Форматирование даты
 const formattedDate = computed(() => {
   const date = new Date(props.review.$createdAt);
@@ -126,11 +150,15 @@ const getMediaUrl = (fileId: string) => {
   return `${config.public.appwriteEndpoint}/storage/buckets/${config.public.appwriteReviewsMediaBucketId}/files/${fileId}/view?project=${config.public.appwriteProjectId}`;
 };
 
-// Удаление отзыва
+// Удаление отзыва - открывает модальное окно подтверждения
 const handleDelete = () => {
-  if (confirm("Вы уверены, что хотите удалить этот отзыв?")) {
-    emit("delete", props.review.$id);
-  }
+  deleteModal.value?.showModal();
+};
+
+// Подтверждение удаления отзыва
+const confirmDelete = () => {
+  emit("delete", props.review.$id);
+  deleteModal.value?.close();
 };
 
 // Открытие модального окна с медиа
