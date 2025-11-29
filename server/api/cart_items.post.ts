@@ -83,15 +83,15 @@ export default defineEventHandler(async (event) => {
       | undefined;
     let itemId: string;
     if (existingItem) {
-      // Update quantity
-      const newQty = Number(existingItem.quantity || 0) + quantity;
-      const updated = await databases.updateDocument(
+      // Update quantity with optimistic locking and retry
+      const updated = await updateCartItemQuantityWithRetry(
+        databases,
         config.public.appwriteDatabaseId,
         config.public.appwriteCartItemsCollectionId,
         String(existingItem.$id),
-        {
-          quantity: newQty,
-        }
+        Number(existingItem.quantity || 0),
+        quantity,
+        existingItem.updatedAt
       );
       itemId = String((updated as unknown as Record<string, unknown>).$id);
     } else {
