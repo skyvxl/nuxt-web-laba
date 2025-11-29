@@ -1,6 +1,9 @@
 import { Query } from "node-appwrite";
 import { validateNumber, validateString, isH3Error } from "../utils/errors";
-import { recalculateCartTotalsWithRetry } from "../utils/cartTotals";
+import {
+  recalculateCartTotalsWithRetry,
+  updateCartItemQuantityWithRetry,
+} from "../utils/cartTotals";
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<Record<string, unknown> | null>(event);
@@ -111,11 +114,15 @@ export default defineEventHandler(async (event) => {
     }
 
     // Recalculate totals with optimistic locking to prevent race conditions
-    await recalculateCartTotalsWithRetry(databases, {
-      databaseId: config.public.appwriteDatabaseId,
-      cartsCollectionId: config.public.appwriteCartsCollectionId,
-      cartItemsCollectionId: config.public.appwriteCartItemsCollectionId,
-    }, cartId);
+    await recalculateCartTotalsWithRetry(
+      databases,
+      {
+        databaseId: config.public.appwriteDatabaseId,
+        cartsCollectionId: config.public.appwriteCartsCollectionId,
+        cartItemsCollectionId: config.public.appwriteCartItemsCollectionId,
+      },
+      cartId
+    );
 
     return { id: itemId };
   } catch (error) {
@@ -123,7 +130,7 @@ export default defineEventHandler(async (event) => {
     if (isH3Error(error)) {
       throw error;
     }
-    
+
     // Only unexpected errors should be wrapped as 500
     console.error("Failed to add item to cart", error);
     throw createError({
