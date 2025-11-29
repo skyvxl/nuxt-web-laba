@@ -1,10 +1,11 @@
 import type { H3Event } from "h3";
-import type { Models } from "node-appwrite";
 
 /**
- * Validates the Appwrite session and returns the authenticated user ID.
- * This prevents userId manipulation by validating against the actual Appwrite session.
- * 
+ * Validates the user session and returns the authenticated user ID.
+ * Uses cookie-based authentication where:
+ * - auth=1 indicates the user is authenticated
+ * - userId contains the Appwrite user ID
+ *
  * @param event - The H3 event object
  * @param required - If true, throws 401 error when not authenticated. If false, returns null.
  * @returns The authenticated user ID or null
@@ -22,30 +23,11 @@ export async function getAuthenticatedUserId(
   event: H3Event,
   required: boolean = true
 ): Promise<string | null> {
-  const { account } = createAppwriteServices();
+  const authCookie = getCookie(event, "auth");
+  const userId = getCookie(event, "userId");
 
-  try {
-    // Get the current authenticated user from Appwrite session
-    // Appwrite manages sessions via httpOnly cookies automatically
-    const user = await account.get() as unknown as Models.User<Models.Preferences>;
-    
-    if (!user || !user.$id) {
-      if (required) {
-        throw createError({
-          statusCode: 401,
-          statusMessage: "Unauthorized",
-        });
-      }
-      return null;
-    }
-
-    return user.$id;
-  } catch (error) {
-    // If there's an error getting the user (e.g., invalid session), treat as unauthorized
-    // Log the error for debugging purposes
-    if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode !== 401) {
-      console.error('Unexpected error during session validation:', error);
-    }
+  // Check if user is authenticated
+  if (!authCookie || authCookie !== "1" || !userId) {
     if (required) {
       throw createError({
         statusCode: 401,
@@ -54,4 +36,6 @@ export async function getAuthenticatedUserId(
     }
     return null;
   }
+
+  return userId;
 }

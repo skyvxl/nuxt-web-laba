@@ -25,9 +25,19 @@ export function useAuth() {
     sameSite: "lax",
     path: "/",
   });
+  const userIdCookie = useCookie<string | null>("userId", {
+    sameSite: "lax",
+    path: "/",
+  });
 
-  const setAuthCookie = (value: boolean) => {
-    authCookie.value = value ? "1" : null;
+  const setAuthCookies = (currentUser: User | null) => {
+    if (currentUser && currentUser.$id) {
+      authCookie.value = "1";
+      userIdCookie.value = currentUser.$id;
+    } else {
+      authCookie.value = null;
+      userIdCookie.value = null;
+    }
   };
 
   async function check() {
@@ -42,10 +52,10 @@ export function useAuth() {
     try {
       const current = (await accountRef.get()) as unknown as User;
       user.value = current;
-      setAuthCookie(true);
+      setAuthCookies(current);
     } catch {
       user.value = null;
-      setAuthCookie(false);
+      setAuthCookies(null);
     } finally {
       initialized.value = true;
     }
@@ -92,7 +102,7 @@ export function useAuth() {
     if (!accountRef) return;
     await accountRef.deleteSession("current");
     user.value = null;
-    setAuthCookie(false);
+    setAuthCookies(null);
   }
 
   async function uploadAvatar(file: File) {
