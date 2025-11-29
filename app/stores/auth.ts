@@ -23,12 +23,17 @@ export const useAuthStore = defineStore("auth", () => {
   const loading = ref(false);
 
   // === Cookies ===
+  // Note: These cookies use 'strict' SameSite to prevent CSRF attacks.
+  // They cannot be httpOnly since they're set from JavaScript,
+  // but SameSite=strict prevents cross-site requests from including these cookies.
   const authCookie = useCookie<string | null>("auth", {
-    sameSite: "lax",
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
   });
   const userIdCookie = useCookie<string | null>("userId", {
-    sameSite: "lax",
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
   });
 
