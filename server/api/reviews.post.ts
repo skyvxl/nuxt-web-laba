@@ -81,7 +81,7 @@ export default defineEventHandler(async (event) => {
 
     // Create review with retry logic (up to 3 attempts for ID conflicts)
     const maxAttempts = 3;
-    let lastError: unknown = null;
+    let lastError: unknown;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
@@ -127,9 +127,11 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // This should only be reached if all attempts failed with ID conflicts
-    // and the loop completed without throwing
-    throw lastError || createError({
+    // This point is unreachable because:
+    // - Success returns early (line 101)
+    // - All errors throw (line 126)
+    // But TypeScript needs a return/throw here for type safety
+    throw lastError ?? createError({
       statusCode: 500,
       message: "Failed to create review after multiple attempts",
     });
