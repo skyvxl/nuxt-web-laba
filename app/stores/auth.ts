@@ -24,11 +24,13 @@ export const useAuthStore = defineStore("auth", () => {
 
   // === Cookies ===
   const authCookie = useCookie<string | null>("auth", {
-    sameSite: "lax",
+    sameSite: "strict",
+    secure: !import.meta.dev,
     path: "/",
   });
   const userIdCookie = useCookie<string | null>("userId", {
-    sameSite: "lax",
+    sameSite: "strict",
+    secure: !import.meta.dev,
     path: "/",
   });
 
