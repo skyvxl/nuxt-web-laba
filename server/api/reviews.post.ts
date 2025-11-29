@@ -1,4 +1,4 @@
-import { Permission, Role } from "node-appwrite";
+import { Permission, Role, ID } from "node-appwrite";
 import type { CreateReviewInput } from "~/shared/models/review";
 import {
   MIN_REVIEW_RATING,
@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const { databases, users, ID } = createAppwriteServices();
+  const { databases, users } = createAppwriteServices();
   const config = useRuntimeConfig();
 
   try {
@@ -79,41 +79,71 @@ export default defineEventHandler(async (event) => {
       userEmail: body.isAnonymous ? null : user.email,
     };
 
-    // Создаём отзыв
-    const review = await databases.createDocument(
-      config.public.appwriteDatabaseId,
-      config.public.appwriteReviewCollectionId,
-      ID.unique(),
-      reviewData,
-      [
-        Permission.read(Role.any()),
-        Permission.update(Role.user(userId)),
-        Permission.delete(Role.user(userId)),
-      ]
-    );
+    // Создаём отзыв с retry логикой (до 3 попыток при конфликте ID)
+    let review;
+    let attempt = 0;
+    const maxAttempts = 3;
+
+    while (attempt < maxAttempts) {
+      try {
+        attempt++;
+
+        review = await databases.createDocument(
+          config.public.appwriteDatabaseId,
+          config.public.appwriteReviewCollectionId,
+          ID.unique(), // Генерируем новый ID для каждой попытки
+          reviewData,
+          [
+            Permission.read(Role.any()),
+            Permission.update(Role.user(userId)),
+            Permission.delete(Role.user(userId)),
+          ]
+        );
+
+        // Успех - выходим из цикла
+        break;
+      } catch (createError: unknown) {
+        const err = createError as {
+          code?: number;
+          message?: string;
+        };
+
+        // Если это конфликт ID и есть еще попытки - пробуем снова
+        if (
+          (err.code === 409 ||
+            err.message?.includes(
+              "Document with the requested ID already exists"
+            )) &&
+          attempt < maxAttempts
+        ) {
+          // Небольшая задержка перед повторной попыткой
+          await new Promise((resolve) => setTimeout(resolve, 50 * attempt));
+          continue;
+        }
+
+        // Если это другая ошибка или закончились попытки - бросаем
+
+        throw createError;
+      }
+    }
+
+    if (!review) {
+      throw createError({
+        statusCode: 500,
+        message: "Failed to create review after multiple attempts",
+      });
+    }
 
     return {
       review,
       message: "Review created successfully",
     };
   } catch (error: unknown) {
-    const err = error as {
-      code?: number;
-      statusCode?: number;
-      message?: string;
-    };
+    console.error("Error creating review:", error);
 
-    // Специальная обработка ошибки дубликата ID
-    if (
-      err.code === 409 ||
-      err.message?.includes("Document with the requested ID already exists")
-    ) {
-      console.error(
-        "Duplicate review ID detected, this should not happen with ID.unique()"
-      );
-    } else {
-      console.error("Error creating review:", error);
-    }
+    const err = error as {
+      statusCode?: number;
+    };
 
     if (err.statusCode) {
       throw error;

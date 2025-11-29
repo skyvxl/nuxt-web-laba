@@ -105,32 +105,118 @@ export default defineEventHandler(async (event) => {
         });
       }
 
-      // Загружаем файл в storage
-      const fileBuffer = Buffer.from(fileField.data);
-      const fileBlob = new File([fileBuffer], fileName, { type: mimeType });
-      const file = await storage.createFile(
-        config.public.appwriteReviewsMediaBucketId,
-        ID.unique(),
-        fileBlob,
-        [Permission.read(Role.any())]
-      );
+      // Загружаем файл в storage с retry логикой
+      let file;
+      let storageAttempt = 0;
+      const maxStorageAttempts = 3;
 
-      // Создаём запись в БД
-      const mediaRecord = await databases.createDocument(
-        config.public.appwriteDatabaseId,
-        config.public.appwriteReviewMediaCollectionId,
-        ID.unique(),
-        {
-          reviewId: reviewId,
-          fileId: file.$id,
-          fileName,
-          mimeType,
-          fileSize,
-          mediaType: isImage ? "image" : "video",
-          uploadedAt: new Date().toISOString(),
-        },
-        [Permission.read(Role.any()), Permission.delete(Role.user(userId))]
-      );
+      while (storageAttempt < maxStorageAttempts) {
+        try {
+          storageAttempt++;
+          const fileBuffer = Buffer.from(fileField.data);
+          const fileBlob = new File([fileBuffer], fileName, { type: mimeType });
+
+          file = await storage.createFile(
+            config.public.appwriteReviewsMediaBucketId,
+            ID.unique(),
+            fileBlob,
+            [Permission.read(Role.any())]
+          );
+
+          break;
+        } catch (storageError: unknown) {
+          const err = storageError as {
+            code?: number;
+            message?: string;
+          };
+
+          if (
+            (err.code === 409 ||
+              err.message?.includes(
+                "Document with the requested ID already exists"
+              )) &&
+            storageAttempt < maxStorageAttempts
+          ) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, 50 * storageAttempt)
+            );
+            continue;
+          }
+
+          throw storageError;
+        }
+      }
+
+      if (!file) {
+        throw createError({
+          statusCode: 500,
+          message: `Failed to upload file ${fileName} after multiple attempts`,
+        });
+      }
+
+      // Создаём запись в БД с retry логикой
+      let mediaRecord;
+      let dbAttempt = 0;
+      const maxDbAttempts = 3;
+
+      while (dbAttempt < maxDbAttempts) {
+        try {
+          dbAttempt++;
+
+          mediaRecord = await databases.createDocument(
+            config.public.appwriteDatabaseId,
+            config.public.appwriteReviewMediaCollectionId,
+            ID.unique(),
+            {
+              reviewId: reviewId,
+              fileId: file.$id,
+              fileName,
+              mimeType,
+              fileSize,
+              mediaType: isImage ? "image" : "video",
+              uploadedAt: new Date().toISOString(),
+            },
+            [Permission.read(Role.any()), Permission.delete(Role.user(userId))]
+          );
+
+          break;
+        } catch (dbError: unknown) {
+          const err = dbError as {
+            code?: number;
+            message?: string;
+          };
+
+          if (
+            (err.code === 409 ||
+              err.message?.includes(
+                "Document with the requested ID already exists"
+              )) &&
+            dbAttempt < maxDbAttempts
+          ) {
+            await new Promise((resolve) => setTimeout(resolve, 50 * dbAttempt));
+            continue;
+          }
+
+          // Если не удалось создать запись в БД - удаляем файл из storage
+          try {
+            await storage.deleteFile(
+              config.public.appwriteReviewsMediaBucketId,
+              file.$id
+            );
+          } catch {
+            // Игнорируем ошибки очистки
+          }
+
+          throw dbError;
+        }
+      }
+
+      if (!mediaRecord) {
+        throw createError({
+          statusCode: 500,
+          message: `Failed to create media record for ${fileName} after multiple attempts`,
+        });
+      }
 
       uploadedMedia.push(mediaRecord);
     }
