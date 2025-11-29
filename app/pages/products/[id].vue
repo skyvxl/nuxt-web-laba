@@ -82,6 +82,23 @@
           </div>
         </div>
       </div>
+
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title">Отзывы</h2>
+          <div class="space-y-3">
+            <label class="label">
+              <span class="label-text">Ваш отзыв</span>
+            </label>
+            <textarea
+              class="textarea textarea-bordered w-full"
+              rows="4"
+              placeholder="Напишите ваш отзыв..."
+            />
+            <div class="text-sm text-base-content/70">Отзывов пока нет</div>
+          </div>
+        </div>
+      </div>
     </div>
     <div
       v-else-if="pending"
