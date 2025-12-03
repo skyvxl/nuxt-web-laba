@@ -2,31 +2,20 @@
   <div class="min-h-screen bg-base-200 flex flex-col overflow-x-hidden">
     <template v-if="initialized">
       <!-- Top Navbar -->
-      <header class="navbar bg-base-100 border-b">
+      <header
+        class="navbar border-b border-base-200 sticky top-0 z-40 backdrop-blur-lg bg-base-100/90"
+      >
         <div class="navbar-start">
           <label
             for="main-drawer"
             class="btn btn-ghost btn-square lg:hidden"
             aria-label="Открыть меню"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h8m-8 6h16"
-              />
-            </svg>
+            <Icon name="heroicons:bars-3" class="w-6 h-6" />
           </label>
           <NuxtLink
             to="/"
-            class="btn btn-ghost text-lg sm:text-xl gap-2 flex items-center"
+            class="btn btn-ghost text-lg sm:text-xl gap-2 flex items-center hover:bg-base-200"
           >
             <img
               src="/image.png"
@@ -35,126 +24,113 @@
               width="64"
               height="64"
             >
-            <span class="truncate">DNS Магазин</span>
+            <span class="font-bold">DNS</span>
           </NuxtLink>
         </div>
         <nav class="navbar-center hidden lg:flex">
-          <ul class="menu menu-horizontal px-1">
-            <li><NuxtLink to="/" class="btn btn-ghost">Главная</NuxtLink></li>
+          <ul class="menu menu-horizontal px-1 gap-1">
             <li>
-              <NuxtLink to="/about" class="btn btn-ghost">О нас</NuxtLink>
+              <NuxtLink
+                to="/"
+                class="btn btn-ghost rounded-xl"
+                :class="{ 'bg-base-300': $route.path === '/' }"
+              >
+                <Icon name="heroicons:home" class="w-4 h-4" />
+                Главная
+              </NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/products" class="btn btn-ghost">Каталог</NuxtLink>
+              <NuxtLink
+                to="/about"
+                class="btn btn-ghost rounded-xl"
+                :class="{
+                  'bg-base-300': $route.path === '/about',
+                }"
+              >
+                <Icon name="heroicons:information-circle" class="w-4 h-4" />
+                О нас
+              </NuxtLink>
             </li>
             <li>
-              <NuxtLink to="/contacts" class="btn btn-ghost">Контакты</NuxtLink>
+              <NuxtLink
+                to="/products"
+                class="btn btn-ghost rounded-xl"
+                :class="{
+                  'bg-base-300': $route.path.startsWith('/products'),
+                }"
+              >
+                <Icon name="heroicons:squares-2x2" class="w-4 h-4" />
+                Каталог
+              </NuxtLink>
+            </li>
+            <li>
+              <NuxtLink
+                to="/contacts"
+                class="btn btn-ghost rounded-xl"
+                :class="{
+                  'bg-base-300': $route.path === '/contacts',
+                }"
+              >
+                <Icon name="heroicons:phone" class="w-4 h-4" />
+                Контакты
+              </NuxtLink>
             </li>
           </ul>
         </nav>
-        <div class="navbar-end items-center gap-3">
-          <label class="swap swap-rotate" aria-label="Переключить тему">
+        <div class="navbar-end items-center gap-2">
+          <!-- Theme toggle -->
+          <label
+            class="swap swap-rotate btn btn-ghost btn-circle"
+            aria-label="Переключить тему"
+          >
             <input
               type="checkbox"
               :checked="theme === 'cosmicburst'"
               @change="toggleTheme"
             >
-            <svg
-              class="swap-on h-6 w-6 fill-current"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"
-              />
-            </svg>
-            <svg
-              class="swap-off h-6 w-6 fill-current"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"
-              />
-            </svg>
+            <Icon name="heroicons:moon" class="swap-on w-5 h-5" />
+            <Icon name="heroicons:sun" class="swap-off w-5 h-5" />
           </label>
 
           <ClientOnly>
             <template #fallback>
-              <NuxtLink to="/auth" class="btn btn-ghost gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-                Войти
+              <NuxtLink to="/auth" class="btn btn-ghost btn-sm gap-2">
+                <Icon name="heroicons:user-circle" class="w-5 h-5" />
+                <span class="hidden sm:inline">Войти</span>
               </NuxtLink>
             </template>
             <template v-if="!user">
-              <NuxtLink to="/auth" class="btn btn-ghost gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-                Войти
+              <NuxtLink to="/auth" class="btn btn-sm gap-2">
+                <Icon
+                  name="heroicons:arrow-right-on-rectangle"
+                  class="w-4 h-4"
+                />
+                <span class="hidden sm:inline">Войти</span>
               </NuxtLink>
             </template>
             <template v-else>
-              <!-- Cart link: show only to authenticated users, displayed after avatar for swapped positions -->
+              <!-- Cart link -->
               <NuxtLink
                 v-if="user"
                 to="/cart"
-                class="btn btn-ghost gap-2 relative ml-2"
+                class="btn btn-ghost btn-circle relative"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.2 6.04A1 1 0 006.8 21h10.4a1 1 0 00.99-.88L19 13H7z"
-                  />
-                </svg>
-                <span>Корзина</span>
+                <Icon name="heroicons:shopping-cart" class="w-5 h-5" />
                 <span
                   v-if="totalItems > 0"
-                  class="badge badge-sm badge-primary absolute -top-1 -right-2"
+                  class="badge badge-sm bg-base-300 text-base-content absolute -top-1 -right-1 min-w-5 h-5"
                   >{{ totalItems }}</span
                 >
               </NuxtLink>
+
+              <!-- User dropdown -->
               <div class="dropdown dropdown-end">
                 <div
                   tabindex="0"
                   role="button"
-                  class="btn btn-ghost btn-circle avatar"
+                  class="btn btn-ghost btn-circle avatar ring-2 ring-base-300 hover:ring-base-content/30 transition-all"
                 >
-                  <div
-                    class="w-10 rounded-full border-2 border-base-content/20 overflow-hidden"
-                  >
+                  <div class="w-9 rounded-full overflow-hidden">
                     <img
                       v-if="avatarUrl"
                       :src="avatarUrl"
@@ -163,7 +139,7 @@
                     >
                     <div
                       v-else
-                      class="w-full h-full rounded-full bg-neutral text-white flex items-center justify-center font-bold"
+                      class="w-full h-full bg-base-300 text-base-content flex items-center justify-center font-bold text-sm"
                     >
                       {{ avatarInitial }}
                     </div>
@@ -171,43 +147,42 @@
                 </div>
                 <ul
                   tabindex="0"
-                  class="menu dropdown-content bg-base-100 rounded-box z-10 mt-3 w-52 p-2 shadow-xl border"
+                  class="menu dropdown-content bg-base-100 rounded-box z-10 mt-3 w-56 p-2 shadow-xl border border-base-300"
                 >
+                  <li class="px-4 py-2 pointer-events-none">
+                    <span
+                      class="text-xs font-normal text-base-content/60 p-0 bg-transparent!"
+                      >Привет,
+                      {{ user.name?.split(" ")[0] || "пользователь" }}!</span
+                    >
+                  </li>
                   <li>
-                    <NuxtLink to="/user" class="btn btn-ghost justify-start">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
+                    <NuxtLink to="/user" class="rounded-xl gap-3">
+                      <Icon name="heroicons:user" class="w-5 h-5" />
                       Личный кабинет
                     </NuxtLink>
                   </li>
                   <li>
-                    <button class="btn btn-ghost justify-start" @click="logout">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                    <NuxtLink to="/cart" class="rounded-xl gap-3">
+                      <Icon name="heroicons:shopping-cart" class="w-5 h-5" />
+                      Корзина
+                      <span
+                        v-if="totalItems > 0"
+                        class="badge badge-sm bg-base-300 text-base-content"
+                        >{{ totalItems }}</span
                       >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                        />
-                      </svg>
+                    </NuxtLink>
+                  </li>
+                  <div class="divider my-1" />
+                  <li>
+                    <button
+                      class="rounded-xl gap-3 text-error hover:bg-error/10"
+                      @click="logout"
+                    >
+                      <Icon
+                        name="heroicons:arrow-right-start-on-rectangle"
+                        class="w-5 h-5"
+                      />
                       Выйти
                     </button>
                   </li>
@@ -223,12 +198,19 @@
         <input id="main-drawer" type="checkbox" class="drawer-toggle" >
         <div class="drawer-content flex flex-col">
           <div class="flex flex-1 min-h-0 min-w-0">
+            <!-- Left Sidebar - Categories -->
             <aside
-              class="hidden lg:block w-64 p-4 bg-base-100 border-r border-base-content/10"
+              class="hidden lg:flex flex-col w-64 p-4 bg-base-100 border-r border-base-200"
             >
-              <div class="space-y-2">
-                <h3 class="font-bold text-lg">Категории</h3>
-                <ul class="menu">
+              <div class="sticky top-20">
+                <div class="flex items-center gap-2 mb-4">
+                  <Icon
+                    name="heroicons:tag"
+                    class="w-5 h-5 text-base-content/70"
+                  />
+                  <h3 class="font-bold text-lg">Категории</h3>
+                </div>
+                <ul class="menu bg-base-200/30 rounded-box p-2">
                   <li
                     v-for="category in catalogCategoryLinks"
                     :key="category.value"
@@ -238,8 +220,12 @@
                         path: '/products',
                         query: { categories: category.value },
                       }"
-                      class="btn btn-ghost justify-start"
+                      class="rounded-xl gap-3"
+                      :class="{
+                        active: $route.query.categories === category.value,
+                      }"
                     >
+                      <Icon :name="category.icon" class="w-5 h-5" />
                       {{ category.label }}
                     </NuxtLink>
                   </li>
@@ -251,96 +237,171 @@
               <slot />
             </main>
 
+            <!-- Right Sidebar - Partners -->
             <aside
-              class="hidden xl:block w-64 p-4 bg-base-100 border-l border-base-content/10"
+              class="hidden xl:flex flex-col w-64 p-4 bg-base-100 border-l border-base-200"
             >
-              <div class="space-y-4">
-                <h3 class="font-bold text-lg">Партнеры</h3>
+              <div class="sticky top-20">
+                <div class="flex items-center gap-2 mb-4">
+                  <Icon
+                    name="heroicons:building-office"
+                    class="w-5 h-5 text-base-content/70"
+                  />
+                  <h3 class="font-bold text-lg">Партнеры</h3>
+                </div>
                 <div class="space-y-3">
-                  <img
-                    src="https://brandwiki.ru/up/brands/product/210720_554.webp"
-                    alt="Ситилинк"
-                    class="rounded-lg w-full h-32 object-contain border-2 border-base-content/20 p-2"
+                  <div
+                    class="bg-base-200/50 rounded-2xl p-4 hover:bg-base-200 transition-colors cursor-pointer"
                   >
-                  <img
-                    src="https://assets.turbologo.ru/blog/ru/2020/02/18162818/logo-mts-ks.png"
-                    alt="МТС"
-                    class="rounded-lg w-full h-32 object-contain border-2 border-base-content/20 p-2"
+                    <img
+                      src="https://brandwiki.ru/up/brands/product/210720_554.webp"
+                      alt="Ситилинк"
+                      class="w-full h-24 object-contain"
+                    >
+                  </div>
+                  <div
+                    class="bg-base-200/50 rounded-2xl p-4 hover:bg-base-200 transition-colors cursor-pointer"
                   >
-                  <img
-                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQxcbHHqNVRXBkbzOlKy8svirKu53s24kZvg&s"
-                    alt="iPhone"
-                    class="rounded-lg w-full h-32 object-contain border-2 border-base-content/20 p-2"
+                    <img
+                      src="https://assets.turbologo.ru/blog/ru/2020/02/18162818/logo-mts-ks.png"
+                      alt="МТС"
+                      class="w-full h-24 object-contain"
+                    >
+                  </div>
+                  <div
+                    class="bg-base-200/50 rounded-2xl p-4 hover:bg-base-200 transition-colors cursor-pointer"
                   >
+                    <img
+                      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQxcbHHqNVRXBkbzOlKy8svirKu53s24kZvg&s"
+                      alt="iPhone"
+                      class="w-full h-24 object-contain"
+                    >
+                  </div>
                 </div>
               </div>
             </aside>
           </div>
         </div>
 
+        <!-- Mobile Drawer -->
         <div class="drawer-side z-50">
           <label
             for="main-drawer"
             aria-label="close sidebar"
             class="drawer-overlay"
           />
-          <ul class="menu bg-base-100 min-h-full w-64 p-4 space-y-2">
-            <li class="menu-title">Навигация</li>
-            <li>
-              <NuxtLink to="/" class="btn btn-ghost justify-start"
-                >Главная</NuxtLink
+          <div class="bg-base-100 min-h-full w-72 p-0">
+            <!-- Drawer header -->
+            <div class="p-4 border-b border-base-200">
+              <div class="flex items-center gap-3">
+                <img src="/image.png" alt="DNS" class="h-10 w-10" >
+                <div>
+                  <h2 class="font-bold text-lg">DNS Магазин</h2>
+                  <p class="text-xs text-base-content/60">
+                    Электроника и техника
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <ul class="menu p-4 space-y-1">
+              <li class="menu-title text-xs uppercase tracking-wider">
+                Навигация
+              </li>
+              <li>
+                <NuxtLink
+                  to="/"
+                  class="rounded-xl gap-3"
+                  :class="{ active: $route.path === '/' }"
+                >
+                  <Icon name="heroicons:home" class="w-5 h-5" />
+                  Главная
+                </NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  to="/about"
+                  class="rounded-xl gap-3"
+                  :class="{ active: $route.path === '/about' }"
+                >
+                  <Icon name="heroicons:information-circle" class="w-5 h-5" />
+                  О нас
+                </NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  to="/products"
+                  class="rounded-xl gap-3"
+                  :class="{ active: $route.path === '/products' }"
+                >
+                  <Icon name="heroicons:squares-2x2" class="w-5 h-5" />
+                  Каталог
+                </NuxtLink>
+              </li>
+              <li>
+                <NuxtLink
+                  to="/contacts"
+                  class="rounded-xl gap-3"
+                  :class="{ active: $route.path === '/contacts' }"
+                >
+                  <Icon name="heroicons:phone" class="w-5 h-5" />
+                  Контакты
+                </NuxtLink>
+              </li>
+
+              <div class="divider my-2" />
+
+              <li class="menu-title text-xs uppercase tracking-wider">
+                Категории
+              </li>
+              <li
+                v-for="category in catalogCategoryLinks"
+                :key="category.value"
               >
-            </li>
-            <li>
-              <NuxtLink to="/about" class="btn btn-ghost justify-start"
-                >О нас</NuxtLink
-              >
-            </li>
-            <li>
-              <NuxtLink to="/products" class="btn btn-ghost justify-start"
-                >Каталог</NuxtLink
-              >
-            </li>
-            <li>
-              <NuxtLink to="/contacts" class="btn btn-ghost justify-start"
-                >Контакты</NuxtLink
-              >
-            </li>
-            <div class="divider" />
-            <li class="menu-title">Категории</li>
-            <li v-for="category in catalogCategoryLinks" :key="category.value">
-              <NuxtLink
-                :to="{
-                  path: '/products',
-                  query: { categories: category.value },
-                }"
-                class="btn btn-ghost justify-start"
-              >
-                {{ category.label }}
-              </NuxtLink>
-            </li>
-          </ul>
+                <NuxtLink
+                  :to="{
+                    path: '/products',
+                    query: { categories: category.value },
+                  }"
+                  class="rounded-xl gap-3"
+                >
+                  <Icon :name="category.icon" class="w-5 h-5" />
+                  {{ category.label }}
+                </NuxtLink>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
-      <footer class="navbar bg-base-100 border-t mt-0 justify-center">
-        <div class="flex flex-wrap items-center gap-4 text-center sm:text-left">
-          <span class="text-xs text-base-content"
-            >&copy; 2025 DNS. Все права защищены</span
+      <!-- Footer -->
+      <footer class="bg-base-100 border-t border-base-200 mt-auto">
+        <div class="container mx-auto px-4 py-6">
+          <div
+            class="flex flex-col sm:flex-row items-center justify-between gap-4"
           >
-          <NuxtLink to="/consent" class="text-xs link"
-            >Согласие на обработку данных</NuxtLink
-          >
-          <NuxtLink to="/privacy" class="text-xs link"
-            >Политика конфиденциальности</NuxtLink
-          >
+            <div class="flex items-center gap-3">
+              <img src="/image.png" alt="DNS" class="h-8 w-8" >
+              <span class="text-sm text-base-content/60"
+                >&copy; 2025 DNS. Все права защищены</span
+              >
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-4">
+              <NuxtLink to="/consent" class="text-sm link link-hover">
+                Согласие на обработку данных
+              </NuxtLink>
+              <NuxtLink to="/privacy" class="text-sm link link-hover">
+                Политика конфиденциальности
+              </NuxtLink>
+            </div>
+          </div>
         </div>
       </footer>
     </template>
     <template v-else>
       <div class="flex justify-center items-center flex-1 min-h-screen">
         <span
-          class="loading loading-spinner loading-lg text-primary"
+          class="loading loading-spinner loading-lg"
           aria-label="Загрузка"
         />
       </div>
@@ -373,10 +434,18 @@ watch(
 );
 
 const catalogCategoryLinks = [
-  { label: "Смартфоны", value: "Смартфоны" },
-  { label: "Ноутбуки", value: "Ноутбуки" },
-  { label: "Бытовая техника", value: "Бытовая техника" },
-  { label: "Аксессуары", value: "Аксессуары" },
+  {
+    label: "Смартфоны",
+    value: "Смартфоны",
+    icon: "heroicons:device-phone-mobile",
+  },
+  { label: "Ноутбуки", value: "Ноутбуки", icon: "heroicons:computer-desktop" },
+  {
+    label: "Бытовая техника",
+    value: "Бытовая техника",
+    icon: "heroicons:home-modern",
+  },
+  { label: "Аксессуары", value: "Аксессуары", icon: "heroicons:puzzle-piece" },
 ];
 const theme = ref("caramellatte");
 const themeCookie = useCookie("theme");

@@ -83,12 +83,12 @@
             </label>
 
             <div
-              class="bg-base-200 rounded-lg p-6 text-center border-2 border-dashed border-base-300 hover:border-primary transition-colors cursor-pointer"
+              class="bg-base-200 rounded-lg p-6 text-center border-2 border-dashed border-base-300 hover:border-base-content/30 transition-colors cursor-pointer"
               @click="() => fileInput?.click()"
             >
               <Icon
                 name="heroicons:photo"
-                class="w-12 h-12 mx-auto mb-3 text-primary"
+                class="w-12 h-12 mx-auto mb-3 text-base-content/60"
               />
               <p class="text-base font-medium mb-2">
                 Загрузите не более 10 файлов
@@ -131,7 +131,7 @@
                 >
                   <Icon
                     name="heroicons:video-camera"
-                    class="w-10 h-10 text-primary mb-1"
+                    class="w-10 h-10 text-base-content/60 mb-1"
                   />
                   <span class="text-xs text-base-content/60">Видео</span>
                 </div>

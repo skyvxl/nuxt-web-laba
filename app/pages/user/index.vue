@@ -50,68 +50,79 @@
 
     <div class="container mx-auto px-4 py-8">
       <div v-if="user" class="max-w-4xl mx-auto space-y-6">
-        <h1 class="text-3xl font-bold text-base-content">Личный кабинет</h1>
+        <!-- Заголовок -->
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1 class="text-3xl font-bold">Личный кабинет</h1>
+            <p class="text-base-content/60 mt-1">
+              Управляйте своим профилем и настройками
+            </p>
+          </div>
+          <div v-if="isAdmin">
+            <NuxtLink to="/admin" class="btn gap-2">
+              <Icon name="heroicons:shield-check" class="w-5 h-5" />
+              Админ-панель
+            </NuxtLink>
+          </div>
+        </div>
 
+        <!-- Профиль пользователя -->
         <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <h2 class="card-title text-2xl mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-              Данные пользователя
-            </h2>
-
-            <div
-              class="flex flex-col sm:flex-row items-center gap-6 mb-6 pb-6 border-b border-base-300"
-            >
+          <div class="card-body p-6 sm:p-8">
+            <div class="flex items-center gap-3 mb-6">
               <div
-                class="avatar placeholder rounded-full border-2 border-base-content/20"
+                class="w-10 h-10 bg-base-200 rounded-lg flex items-center justify-center"
               >
+                <Icon name="heroicons:user" class="w-5 h-5 text-base-content" />
+              </div>
+              <h2 class="text-xl font-bold">Профиль</h2>
+            </div>
+
+            <!-- Аватар и основная информация -->
+            <div
+              class="flex flex-col sm:flex-row items-center gap-6 mb-6 pb-6 border-b border-base-200"
+            >
+              <div class="relative group">
                 <div
-                  class="w-24 h-24 rounded-full bg-neutral text-neutral-content flex items-center justify-center"
+                  class="w-28 h-28 rounded-box bg-base-200 flex items-center justify-center overflow-hidden ring-4 ring-base-300"
                 >
                   <img
                     v-if="avatarUrl"
                     :src="avatarUrl"
                     alt="Avatar"
-                    class="w-24 h-24 object-cover rounded-full"
+                    class="w-full h-full object-cover"
                   >
-                  <span v-else class="text-3xl">{{ avatarInitial }}</span>
+                  <span
+                    v-else
+                    class="text-4xl font-bold text-base-content/60"
+                    >{{ avatarInitial }}</span
+                  >
                 </div>
+                <span
+                  v-if="uploadingAvatar"
+                  class="absolute inset-0 flex items-center justify-center bg-base-100/80 rounded-box"
+                >
+                  <span class="loading loading-spinner loading-md" />
+                </span>
               </div>
+
               <div class="flex-1 w-full text-center sm:text-left">
                 <h3 class="text-2xl font-bold">{{ name }}</h3>
-                <p class="text-base-content/70">{{ email }}</p>
-                <div class="flex flex-col sm:flex-row gap-2 mt-3">
-                  <label
-                    class="btn btn-sm btn-ghost flex-1 sm:flex-none min-h-8 cursor-pointer"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    Загрузить аватар
+                <p
+                  class="text-base-content/60 flex items-center justify-center sm:justify-start gap-2 mt-1"
+                >
+                  <Icon name="heroicons:envelope" class="w-4 h-4" />
+                  {{ email }}
+                </p>
+
+                <div
+                  class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4"
+                >
+                  <label class="btn btn-sm btn-outline cursor-pointer">
+                    <Icon name="heroicons:camera" class="w-4 h-4" />
+                    <span class="hidden sm:inline">Загрузить фото</span>
                     <input
                       type="file"
                       class="hidden"
@@ -121,32 +132,15 @@
                   </label>
                   <button
                     v-if="avatarUrl"
-                    class="btn btn-sm btn-ghost flex-1 sm:flex-none min-h-8"
+                    class="btn btn-sm btn-outline btn-error"
                     @click="removeAvatar"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4 mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                    Удалить
+                    <Icon name="heroicons:trash" class="w-4 h-4" />
+                    <span class="hidden sm:inline">Удалить</span>
                   </button>
-                  <span
-                    v-if="uploadingAvatar"
-                    class="loading loading-spinner loading-sm mx-auto sm:mx-0"
-                  />
                 </div>
-                <p class="text-xs text-base-content/60 mt-2">
-                  Максимум 5 МБ. Форматы: jpg, jpeg, png, gif, webp
+                <p class="text-xs text-base-content/50 mt-2">
+                  До 5 МБ • JPG, PNG, GIF, WebP
                 </p>
               </div>
             </div>
@@ -154,317 +148,324 @@
             <div
               v-if="avatarStatus"
               :class="[
-                'alert alert-soft',
+                'alert mb-4',
                 avatarStatus.type === 'error' ? 'alert-error' : 'alert-success',
-                'mb-4',
               ]"
             >
+              <Icon
+                :name="
+                  avatarStatus.type === 'error'
+                    ? 'heroicons:x-circle'
+                    : 'heroicons:check-circle'
+                "
+                class="w-5 h-5"
+              />
               <span>{{ avatarStatus.message }}</span>
             </div>
 
+            <!-- Информация о профиле -->
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div class="form-control">
-                <div class="label">
-                  <span class="label-text font-semibold">ID пользователя</span>
+              <div class="bg-base-200/50 rounded-xl p-4">
+                <div
+                  class="flex items-center gap-2 text-sm text-base-content/60 mb-1"
+                >
+                  <Icon name="heroicons:identification" class="w-4 h-4" />
+                  ID пользователя
                 </div>
-                <div class="text-sm break-all bg-base-200 p-3 rounded-lg">
-                  {{ uid }}
-                </div>
+                <p class="font-mono text-sm break-all">{{ uid }}</p>
               </div>
-              <div class="form-control">
-                <div class="label">
-                  <span class="label-text font-semibold">Телефон</span>
+              <div class="bg-base-200/50 rounded-xl p-4">
+                <div
+                  class="flex items-center gap-2 text-sm text-base-content/60 mb-1"
+                >
+                  <Icon name="heroicons:phone" class="w-4 h-4" />
+                  Телефон
                 </div>
-                <div class="text-sm bg-base-200 p-3 rounded-lg">
-                  {{ phone }}
-                </div>
+                <p class="font-semibold">{{ phone }}</p>
               </div>
-              <div class="form-control">
-                <div class="label">
-                  <span class="label-text font-semibold">Дата регистрации</span>
+              <div class="bg-base-200/50 rounded-xl p-4">
+                <div
+                  class="flex items-center gap-2 text-sm text-base-content/60 mb-1"
+                >
+                  <Icon name="heroicons:calendar" class="w-4 h-4" />
+                  Дата регистрации
                 </div>
-                <div class="text-sm bg-base-200 p-3 rounded-lg">
-                  {{ creation }}
-                </div>
+                <p class="font-semibold">{{ creation }}</p>
               </div>
-              <div class="form-control">
-                <div class="label">
-                  <span class="label-text font-semibold">Последний вход</span>
+              <div class="bg-base-200/50 rounded-xl p-4">
+                <div
+                  class="flex items-center gap-2 text-sm text-base-content/60 mb-1"
+                >
+                  <Icon name="heroicons:clock" class="w-4 h-4" />
+                  Последний вход
                 </div>
-                <div class="text-sm bg-base-200 p-3 rounded-lg">
-                  {{ lastLogin }}
-                </div>
+                <p class="font-semibold">{{ lastLogin }}</p>
               </div>
-            </div>
-
-            <div v-if="isAdmin" class="mt-6">
-              <NuxtLink to="/admin" class="btn"> Перейти в админку </NuxtLink>
             </div>
           </div>
         </div>
 
+        <!-- Настройки -->
         <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <h2 class="card-title text-2xl mb-4">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              Настройки
-            </h2>
-
-            <div class="bg-base-200 rounded-lg p-4 mb-4">
-              <h3 class="font-semibold mb-3 flex items-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-                  />
-                </svg>
-                Тема интерфейса
-              </h3>
+          <div class="card-body p-6 sm:p-8">
+            <div class="flex items-center gap-3 mb-6">
               <div
-                class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
+                class="w-10 h-10 bg-base-200 rounded-lg flex items-center justify-center"
               >
-                <div class="join w-full sm:w-auto">
-                  <button
-                    type="button"
-                    class="btn btn-sm join-item flex-1"
-                    :class="{ 'btn-active': selectedTheme === 'caramellatte' }"
-                    @click="applyLocalTheme('caramellatte')"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4 sm:mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                      />
-                    </svg>
-                    <span class="hidden sm:inline">Светлая</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm join-item flex-1"
-                    :class="{ 'btn-active': selectedTheme === 'cosmicburst' }"
-                    @click="applyLocalTheme('cosmicburst')"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4 sm:mr-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                      />
-                    </svg>
-                    <span class="hidden sm:inline">Тёмная</span>
-                  </button>
-                </div>
-                <button
-                  class="btn btn-ghost border-2 border-base-content/20 btn-sm w-full sm:w-auto"
-                  @click="saveThemePreference"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4 mr-1"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                    />
-                  </svg>
-                  Сохранить в профиле
-                </button>
-                <div v-if="themeStatus" class="badge" :class="themeStatusClass">
-                  {{ themeStatus }}
-                </div>
+                <Icon
+                  name="heroicons:cog-6-tooth"
+                  class="w-5 h-5 text-base-content"
+                />
               </div>
-              <p class="text-xs text-base-content/60 mt-2">
-                Тема применяется локально сразу. Нажмите кнопку для сохранения
-                на сервере
-              </p>
+              <h2 class="text-xl font-bold">Настройки</h2>
             </div>
 
-            <div class="divider" />
-
-            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div class="bg-base-200 rounded-lg p-4">
-                <h3 class="font-semibold mb-3 flex items-center gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+            <!-- Тема -->
+            <div class="bg-base-200/50 rounded-box p-5 mb-6">
+              <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 bg-warning/10 rounded-lg flex items-center justify-center"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    <Icon
+                      name="heroicons:swatch"
+                      class="w-5 h-5 text-warning"
                     />
-                  </svg>
-                  Смена E-mail
-                </h3>
-                <div class="form-control">
-                  <label for="new-email" class="label"
-                    ><span class="label-text">Новый E-mail</span></label
-                  >
-                  <input
-                    id="new-email"
-                    v-model="newEmail"
-                    type="email"
-                    class="input input-bordered w-full"
-                    placeholder="example@email.com"
-                  >
+                  </div>
+                  <div>
+                    <h3 class="font-semibold">Тема интерфейса</h3>
+                    <p class="text-sm text-base-content/60">
+                      Выберите предпочитаемую тему
+                    </p>
+                  </div>
                 </div>
-                <div class="form-control mt-2">
-                  <label for="email-password" class="label"
-                    ><span class="label-text">Текущий пароль</span></label
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <div class="join shadow-sm rounded-lg">
+                    <button
+                      type="button"
+                      class="btn btn-sm join-item gap-1"
+                      :class="
+                        selectedTheme === 'caramellatte'
+                          ? 'btn-active'
+                          : 'btn-ghost'
+                      "
+                      @click="applyLocalTheme('caramellatte')"
+                    >
+                      <Icon name="heroicons:sun" class="w-4 h-4" />
+                      Светлая
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm join-item gap-1"
+                      :class="
+                        selectedTheme === 'cosmicburst'
+                          ? 'btn-active'
+                          : 'btn-ghost'
+                      "
+                      @click="applyLocalTheme('cosmicburst')"
+                    >
+                      <Icon name="heroicons:moon" class="w-4 h-4" />
+                      Тёмная
+                    </button>
+                  </div>
+
+                  <button
+                    class="btn btn-sm btn-outline"
+                    @click="saveThemePreference"
                   >
-                  <input
-                    id="email-password"
-                    v-model="emailPassword"
-                    type="password"
-                    class="input input-bordered w-full"
-                    placeholder="••••••••"
+                    <Icon name="heroicons:cloud-arrow-up" class="w-4 h-4" />
+                    Сохранить
+                  </button>
+
+                  <span
+                    v-if="themeStatus"
+                    class="badge"
+                    :class="themeStatusClass"
                   >
+                    {{ themeStatus }}
+                  </span>
                 </div>
-                <button
-                  class="btn btn-ghost border-2 border-base-content/20 btn-block mt-4"
-                  :disabled="!newEmail || !emailPassword"
-                  @click="changeEmail"
-                >
-                  Сменить почту
-                </button>
+              </div>
+            </div>
+
+            <div class="divider my-2">
+              <span class="text-sm text-base-content/50">Безопасность</span>
+            </div>
+
+            <!-- Смена email и пароля -->
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div class="bg-base-200/50 rounded-xl p-5">
+                <div class="flex items-center gap-3 mb-4">
+                  <div
+                    class="w-8 h-8 bg-info/10 rounded-lg flex items-center justify-center"
+                  >
+                    <Icon name="heroicons:envelope" class="w-4 h-4 text-info" />
+                  </div>
+                  <h3 class="font-semibold">Смена E-mail</h3>
+                </div>
+
+                <div class="space-y-3">
+                  <div>
+                    <label for="new-email" class="label py-1">
+                      <span class="label-text text-sm">Новый E-mail</span>
+                    </label>
+                    <input
+                      id="new-email"
+                      v-model="newEmail"
+                      type="email"
+                      class="input input-bordered w-full"
+                      placeholder="example@email.com"
+                    >
+                  </div>
+                  <div>
+                    <label for="email-password" class="label py-1">
+                      <span class="label-text text-sm">Текущий пароль</span>
+                    </label>
+                    <input
+                      id="email-password"
+                      v-model="emailPassword"
+                      type="password"
+                      class="input input-bordered w-full"
+                      placeholder="••••••••"
+                    >
+                  </div>
+                  <button
+                    class="btn btn-block mt-2"
+                    :disabled="!newEmail || !emailPassword"
+                    @click="changeEmail"
+                  >
+                    <Icon name="heroicons:envelope" class="w-4 h-4" />
+                    Сменить почту
+                  </button>
+                </div>
               </div>
 
-              <div class="bg-base-200 rounded-lg p-4">
-                <h3 class="font-semibold mb-3 flex items-center gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+              <div class="bg-base-200/50 rounded-xl p-5">
+                <div class="flex items-center gap-3 mb-4">
+                  <div
+                    class="w-8 h-8 bg-error/10 rounded-lg flex items-center justify-center"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    <Icon
+                      name="heroicons:lock-closed"
+                      class="w-4 h-4 text-error"
                     />
-                  </svg>
-                  Смена пароля
-                </h3>
-                <div class="form-control">
-                  <label for="old-password" class="label"
-                    ><span class="label-text">Старый пароль</span></label
-                  >
-                  <input
-                    id="old-password"
-                    v-model="oldPassword"
-                    type="password"
-                    class="input input-bordered w-full"
-                    placeholder="••••••••"
-                  >
+                  </div>
+                  <h3 class="font-semibold">Смена пароля</h3>
                 </div>
-                <div class="form-control mt-2">
-                  <label for="new-password" class="label"
-                    ><span class="label-text">Новый пароль</span></label
+
+                <div class="space-y-3">
+                  <div>
+                    <label for="old-password" class="label py-1">
+                      <span class="label-text text-sm">Старый пароль</span>
+                    </label>
+                    <input
+                      id="old-password"
+                      v-model="oldPassword"
+                      type="password"
+                      class="input input-bordered w-full"
+                      placeholder="••••••••"
+                    >
+                  </div>
+                  <div>
+                    <label for="new-password" class="label py-1">
+                      <span class="label-text text-sm">Новый пароль</span>
+                    </label>
+                    <input
+                      id="new-password"
+                      v-model="newPassword"
+                      type="password"
+                      class="input input-bordered w-full"
+                      placeholder="••••••••"
+                    >
+                  </div>
+                  <button
+                    class="btn btn-block mt-2"
+                    :disabled="!newPassword || !oldPassword"
+                    @click="changePassword"
                   >
-                  <input
-                    id="new-password"
-                    v-model="newPassword"
-                    type="password"
-                    class="input input-bordered w-full"
-                    placeholder="••••••••"
-                  >
+                    <Icon name="heroicons:key" class="w-4 h-4" />
+                    Сменить пароль
+                  </button>
                 </div>
-                <button
-                  class="btn btn-ghost border-2 border-base-content/20 btn-block mt-4"
-                  :disabled="!newPassword || !oldPassword"
-                  @click="changePassword"
-                >
-                  Сменить пароль
-                </button>
               </div>
             </div>
 
             <div
               v-if="settingsStatus"
-              :class="['alert alert-soft mt-4', settingsStatusClass]"
+              :class="['alert mt-4', settingsStatusClass]"
             >
+              <Icon
+                :name="
+                  settingsStatusType === 'error'
+                    ? 'heroicons:x-circle'
+                    : 'heroicons:check-circle'
+                "
+                class="w-5 h-5"
+              />
               <span>{{ settingsStatus }}</span>
             </div>
           </div>
         </div>
 
+        <!-- Выход -->
         <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <button
-              class="btn btn-ghost border-2 border-base-content/20"
-              @click="logout"
+          <div class="card-body p-6">
+            <div
+              class="flex flex-col sm:flex-row items-center justify-between gap-4"
             >
-              Выйти из аккаунта
-            </button>
+              <div class="flex items-center gap-3 text-center sm:text-left">
+                <div
+                  class="w-10 h-10 bg-error/10 rounded-lg flex items-center justify-center"
+                >
+                  <Icon
+                    name="heroicons:arrow-right-start-on-rectangle"
+                    class="w-5 h-5 text-error"
+                  />
+                </div>
+                <div>
+                  <h3 class="font-semibold">Выйти из аккаунта</h3>
+                  <p class="text-sm text-base-content/60">
+                    Завершить текущую сессию
+                  </p>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-error" @click="logout">
+                <Icon
+                  name="heroicons:arrow-right-start-on-rectangle"
+                  class="w-5 h-5"
+                />
+                Выйти
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       <div
         v-else
-        class="flex min-h-[40vh] flex-col items-center justify-center space-y-4"
+        class="flex min-h-[50vh] flex-col items-center justify-center space-y-6 px-4"
       >
-        <p class="text-center text-lg">
-          Авторизуйтесь, чтобы просмотреть профиль
-        </p>
-        <NuxtLink
-          to="/auth"
-          class="btn btn-ghost border-2 border-base-content/20"
-          >Войти</NuxtLink
+        <div
+          class="w-20 h-20 bg-base-200 rounded-full flex items-center justify-center"
         >
+          <Icon
+            name="heroicons:user-circle"
+            class="w-12 h-12 text-base-content/30"
+          />
+        </div>
+        <div class="text-center">
+          <h2 class="text-2xl font-bold mb-2">Вы не авторизованы</h2>
+          <p class="text-base-content/60">
+            Войдите в аккаунт, чтобы просмотреть профиль
+          </p>
+        </div>
+        <NuxtLink to="/auth" class="btn btn-lg gap-2">
+          <Icon name="heroicons:arrow-right-on-rectangle" class="w-5 h-5" />
+          Войти в аккаунт
+        </NuxtLink>
       </div>
     </div>
   </ClientOnly>

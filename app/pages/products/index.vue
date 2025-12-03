@@ -22,9 +22,7 @@
                 class="input input-bordered join-item w-full"
                 placeholder="Например, iPhone 15"
               >
-              <button type="submit" class="btn btn-primary join-item">
-                Найти
-              </button>
+              <button type="submit" class="btn join-item">Найти</button>
             </div>
           </div>
           <div class="flex gap-2">
