@@ -67,7 +67,7 @@
                           :src="item.productImage"
                           :alt="item.productName || 'Product image'"
                           class="w-full h-full object-cover"
-                        >
+                        />
                         <div
                           v-else
                           class="w-full h-full flex items-center justify-center text-xs"
@@ -90,27 +90,35 @@
                   </td>
                   <td class="text-right">{{ item.fixedPrice }} ₽</td>
                   <td class="text-center">
-                    <div class="inline-flex items-center gap-2">
+                    <div class="inline-flex items-center gap-1">
                       <button
                         type="button"
-                        class="btn btn-sm btn-ghost"
-                        :disabled="item.quantity <= 1"
+                        class="btn btn-sm btn-circle btn-ghost"
+                        :disabled="getDisplayQuantity(item) <= 1"
                         @click="decrement(item)"
                       >
-                        -
+                        <Icon name="heroicons:minus" class="w-4 h-4" />
                       </button>
-                      <span class="w-8 text-center">{{ item.quantity }}</span>
+                      <span class="w-10 text-center font-semibold relative">
+                        {{ getDisplayQuantity(item) }}
+                        <span
+                          v-if="isItemSyncing(item.id)"
+                          class="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-pulse"
+                        />
+                      </span>
                       <button
                         type="button"
-                        class="btn btn-sm btn-ghost"
+                        class="btn btn-sm btn-circle btn-ghost"
                         @click="increment(item)"
                       >
-                        +
+                        <Icon name="heroicons:plus" class="w-4 h-4" />
                       </button>
                     </div>
                   </td>
                   <td class="text-right font-semibold">
-                    {{ formatPrice(item.fixedPrice * item.quantity) }}
+                    {{
+                      formatPrice(item.fixedPrice * getDisplayQuantity(item))
+                    }}
                   </td>
                   <td class="text-right">
                     <button
@@ -183,17 +191,34 @@ onMounted(async () => {
   await cartStore.fetchCart();
 });
 
-const { cart, items, totalPrice, totalItems } = storeToRefs(cartStore);
+const { cart, items, totalPrice, totalItems, pendingUpdates, updatingItems } =
+  storeToRefs(cartStore);
 
 const deleteModal = ref<HTMLDialogElement | null>(null);
 const itemToDelete = ref<CartItem | null>(null);
 
+// Get display quantity (with optimistic updates)
+function getDisplayQuantity(item: CartItem): number {
+  return cartStore.getItemQuantity(item.id);
+}
+
+// Check if item is being synced
+function isItemSyncing(itemId: string): boolean {
+  return updatingItems.value.has(itemId) || pendingUpdates.value.has(itemId);
+}
+
 function increment(item: CartItem) {
-  cartStore.updateItem(item.id, item.quantity + 1);
+  const currentQty = getDisplayQuantity(item);
+  cartStore.updateItemOptimistic(item.id, currentQty + 1);
 }
+
 function decrement(item: CartItem) {
-  if (item.quantity > 1) cartStore.updateItem(item.id, item.quantity - 1);
+  const currentQty = getDisplayQuantity(item);
+  if (currentQty > 1) {
+    cartStore.updateItemOptimistic(item.id, currentQty - 1);
+  }
 }
+
 function remove(item: CartItem) {
   itemToDelete.value = item;
   deleteModal.value?.showModal();

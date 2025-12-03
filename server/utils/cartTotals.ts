@@ -225,21 +225,16 @@ export async function recalculateCartTotalsWithRetry(
 }
 
 /**
- * Updates cart item quantity with optimistic locking and retry mechanism.
+ * Updates cart item quantity with retry mechanism.
  *
- * This function handles race conditions when multiple requests try to update
- * the same cart item simultaneously:
- * 1. Compare the current item's updatedAt with the expected version
- * 2. If they match, perform the update
- * 3. If they don't match (concurrent modification), re-fetch and retry
+ * This function handles race conditions by always fetching the latest
+ * quantity before adding to it.
  *
  * @param databases - Appwrite databases instance
  * @param databaseId - Database ID
  * @param collectionId - Cart items collection ID
  * @param itemId - The cart item document ID
- * @param currentQuantity - The current quantity (used to calculate new value)
  * @param addQuantity - Quantity to add to current
- * @param expectedVersion - The expected updatedAt value for optimistic locking
  * @returns The updated document
  * @throws Error if max retries exceeded or non-transient errors occur
  */
@@ -248,61 +243,30 @@ export async function updateCartItemQuantityWithRetry(
   databaseId: string,
   collectionId: string,
   itemId: string,
-  currentQuantity: number,
-  addQuantity: number,
-  expectedVersion: unknown
+  addQuantity: number
 ): Promise<Record<string, unknown>> {
   let lastError: Error | null = null;
-  let latestQuantity = currentQuantity;
-  let latestVersion = expectedVersion;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      // On retry, re-fetch the current state
-      if (attempt > 0) {
-        const currentItem = await databases.getDocument(
-          databaseId,
-          collectionId,
-          itemId
-        );
-        const itemDoc = currentItem as unknown as Record<string, unknown>;
-        latestQuantity = parseNumericValue(itemDoc.quantity);
-        latestVersion = itemDoc.updatedAt;
-      }
-
-      // Calculate new quantity
-      const newQuantity = latestQuantity + addQuantity;
-      const timestampNow = new Date().toISOString();
-
-      // Check version before update (optimistic locking)
+      // Always fetch the latest state
       const currentItem = await databases.getDocument(
         databaseId,
         collectionId,
         itemId
       );
       const itemDoc = currentItem as unknown as Record<string, unknown>;
+      const latestQuantity = parseNumericValue(itemDoc.quantity);
 
-      if (String(itemDoc.updatedAt ?? "") !== String(latestVersion ?? "")) {
-        // Item was modified by another request
-        if (attempt < MAX_RETRIES - 1) {
-          const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
-        }
-        throw new Error(
-          "Cart item was modified by concurrent requests, max retries exceeded"
-        );
-      }
+      // Calculate new quantity
+      const newQuantity = Math.max(1, latestQuantity + addQuantity);
 
       // Perform the update
       const updated = await databases.updateDocument(
         databaseId,
         collectionId,
         itemId,
-        {
-          quantity: newQuantity,
-          updatedAt: timestampNow,
-        }
+        { quantity: newQuantity }
       );
 
       return updated as unknown as Record<string, unknown>;

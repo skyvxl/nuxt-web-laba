@@ -86,15 +86,13 @@ export default defineEventHandler(async (event) => {
       | undefined;
     let itemId: string;
     if (existingItem) {
-      // Update quantity with optimistic locking and retry
+      // Update quantity with retry
       const updated = await updateCartItemQuantityWithRetry(
         databases,
         config.public.appwriteDatabaseId,
         config.public.appwriteCartItemsCollectionId,
         String(existingItem.$id),
-        Number(existingItem.quantity || 0),
-        quantity,
-        existingItem.updatedAt
+        quantity
       );
       itemId = String((updated as unknown as Record<string, unknown>).$id);
     } else {
