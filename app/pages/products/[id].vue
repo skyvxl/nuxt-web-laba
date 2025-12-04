@@ -203,24 +203,50 @@ v-for="review in reviews" :key="review.$id" :review="review"
 
       <!-- Модальное окно для просмотра медиа -->
       <dialog ref="mediaModal" class="modal" @close="handleModalClose">
-        <div class="modal-box max-w-7xl w-11/12 max-h-[90vh] p-0 overflow-hidden">
+        <div class="modal-box max-w-7xl w-11/12 max-h-[90vh] p-0 overflow-hidden relative">
+          <!-- Кнопка закрытия -->
           <form method="dialog">
             <button
-              class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-10 bg-base-100/80 hover:bg-base-100">
+              class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-20 bg-base-100/80 hover:bg-base-100">
               ✕
             </button>
           </form>
-          <div v-if="selectedMedia" class="w-full h-full flex items-center justify-center bg-base-200">
+
+          <!-- Навигация влево -->
+          <button
+v-if="allMedia.length > 1" type="button"
+            class="btn btn-circle btn-ghost absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-base-100/80 hover:bg-base-100"
+            :disabled="currentMediaIndex <= 0" @click="navigateMedia(-1)">
+            <Icon name="heroicons:chevron-left" class="w-6 h-6" />
+          </button>
+
+          <!-- Навигация вправо -->
+          <button
+v-if="allMedia.length > 1" type="button"
+            class="btn btn-circle btn-ghost absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-base-100/80 hover:bg-base-100"
+            :disabled="currentMediaIndex >= allMedia.length - 1" @click="navigateMedia(1)">
+            <Icon name="heroicons:chevron-right" class="w-6 h-6" />
+          </button>
+
+          <!-- Контент -->
+          <div v-if="selectedMedia" class="w-full h-full flex items-center justify-center bg-base-200 min-h-[50vh]">
             <!-- Изображение -->
             <img
 v-if="selectedMedia.mediaType === 'image'" :src="getMediaUrl(selectedMedia.fileId)"
-              :alt="selectedMedia.fileName" class="max-w-full max-h-[90vh] w-auto h-auto object-contain">
+              :alt="selectedMedia.fileName" class="max-w-full max-h-[85vh] w-auto h-auto object-contain">
             <!-- Видео -->
             <video
 v-else :key="selectedMedia.fileId" ref="videoPlayer" :src="getMediaUrl(selectedMedia.fileId)"
-              class="max-w-full max-h-[90vh] w-auto h-auto" controls controlslist="nodownload">
+              class="max-w-full max-h-[85vh] w-auto h-auto" controls controlslist="nodownload">
               <track kind="captions">
             </video>
+          </div>
+
+          <!-- Индикатор позиции -->
+          <div
+v-if="allMedia.length > 1"
+            class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-base-100/80 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-medium">
+            {{ currentMediaIndex + 1 }} / {{ allMedia.length }}
           </div>
         </div>
         <form method="dialog" class="modal-backdrop">
@@ -272,6 +298,18 @@ const {
 const mediaModal = ref<HTMLDialogElement | null>(null);
 const selectedMedia = ref<ReviewMedia | null>(null);
 const videoPlayer = ref<HTMLVideoElement | null>(null);
+const currentMediaIndex = ref(0);
+
+// Собираем все медиа из всех отзывов в единый массив
+const allMedia = computed(() => {
+  const mediaList: ReviewMedia[] = [];
+  for (const review of reviews.value) {
+    if (review.media && review.media.length > 0) {
+      mediaList.push(...review.media);
+    }
+  }
+  return mediaList;
+});
 
 // Загружаем отзывы и статистику
 onMounted(async () => {
@@ -302,9 +340,49 @@ const handleReviewSubmitted = async () => {
 
 // Открытие модального окна с медиа
 const handleOpenMedia = (media: ReviewMedia) => {
+  // Находим индекс этого медиа в общем массиве
+  const index = allMedia.value.findIndex((m) => m.$id === media.$id);
+  currentMediaIndex.value = index >= 0 ? index : 0;
   selectedMedia.value = media;
   mediaModal.value?.showModal();
 };
+
+// Навигация между медиа
+const navigateMedia = (direction: -1 | 1) => {
+  const newIndex = currentMediaIndex.value + direction;
+  if (newIndex < 0 || newIndex >= allMedia.value.length) return;
+
+  // Останавливаем текущее видео перед переключением
+  if (videoPlayer.value) {
+    videoPlayer.value.pause();
+    videoPlayer.value.currentTime = 0;
+  }
+
+  currentMediaIndex.value = newIndex;
+  selectedMedia.value = allMedia.value[newIndex] ?? null;
+};
+
+// Обработка клавиатурных событий для навигации
+const handleKeydown = (event: KeyboardEvent) => {
+  if (!mediaModal.value?.open) return;
+
+  if (event.key === "ArrowLeft") {
+    event.preventDefault();
+    navigateMedia(-1);
+  } else if (event.key === "ArrowRight") {
+    event.preventDefault();
+    navigateMedia(1);
+  }
+};
+
+// Добавляем обработчик клавиатуры
+onMounted(() => {
+  window.addEventListener("keydown", handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeydown);
+});
 
 // Закрытие модального окна
 const handleModalClose = () => {
@@ -314,6 +392,7 @@ const handleModalClose = () => {
     videoPlayer.value.currentTime = 0;
   }
   selectedMedia.value = null;
+  currentMediaIndex.value = 0;
 };
 
 // Получение URL медиа файла
