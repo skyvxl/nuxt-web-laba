@@ -20,11 +20,7 @@
 
     <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <ClientOnly>
-        <article
-          v-for="card in statCards"
-          :key="card.label"
-          class="card bg-base-100 shadow-lg"
-        >
+        <article v-for="card in statCards" :key="card.label" class="card bg-base-100 shadow-lg">
           <div class="card-body">
             <p class="text-sm text-base-content/60">{{ card.label }}</p>
             <p class="text-4xl font-bold">{{ card.value }}</p>
@@ -32,11 +28,7 @@
           </div>
         </article>
         <template #fallback>
-          <article
-            v-for="i in 4"
-            :key="`skeleton-${i}`"
-            class="card bg-base-100 shadow-lg"
-          >
+          <article v-for="i in 4" :key="`skeleton-${i}`" class="card bg-base-100 shadow-lg">
             <div class="card-body">
               <p class="text-sm text-base-content/60">Загрузка...</p>
               <p class="text-4xl font-bold">—</p>
@@ -57,9 +49,7 @@
                 Несколько свежих позиций каталога.
               </p>
             </div>
-            <NuxtLink to="/admin/products" class="btn btn-sm"
-              >Все товары</NuxtLink
-            >
+            <NuxtLink to="/admin/products" class="btn btn-sm">Все товары</NuxtLink>
           </div>
 
           <ClientOnly>
@@ -70,10 +60,7 @@
               <span>{{ productsError }}</span>
             </div>
             <div v-else>
-              <div
-                v-if="!latestProducts.length"
-                class="py-8 text-center text-base-content/70"
-              >
+              <div v-if="!latestProducts.length" class="py-8 text-center text-base-content/70">
                 Пока нет товаров — создайте первый.
               </div>
               <div v-else class="overflow-x-auto">
@@ -91,10 +78,7 @@
                       <td>{{ product.category }}</td>
                       <td class="text-right">
                         {{ formatPrice(product.price) }}
-                        <span
-                          v-if="product.oldPrice"
-                          class="block text-xs text-base-content/60 line-through"
-                        >
+                        <span v-if="product.oldPrice" class="block text-xs text-base-content/60 line-through">
                           {{ formatPrice(product.oldPrice) }}
                         </span>
                       </td>
@@ -194,7 +178,7 @@ const {
   error: productsErrorRaw,
 } = await useAsyncData(
   "admin-dashboard-products",
-  () => $fetch("/api/products"),
+  () => $fetch<{ products: Product[] }>("/api/products"),
   {
     server: false, // Fetch on client to ensure proper rendering
   }

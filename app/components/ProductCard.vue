@@ -1,14 +1,11 @@
 <template>
   <article
-    class="card bg-base-100 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-translate transition-transform duration-300 h-full flex flex-col group"
-  >
+    class="card bg-base-100 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-translate transition-transform duration-300 h-full flex flex-col group">
     <figure class="relative overflow-hidden bg-base-200/50">
       <NuxtLink :to="`/products/${product.id}`" class="block w-full">
         <img
-          :src="product.image"
-          :alt="product.name"
-          class="h-56 w-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-        >
+:src="product.image" :alt="product.name"
+          class="h-56 w-full object-contain p-4 group-hover:scale-105 transition-transform duration-300">
       </NuxtLink>
       <!-- Скидка badge -->
       <div v-if="product.oldPrice" class="absolute top-3 left-3">
@@ -41,21 +38,12 @@
 
       <!-- Кнопки -->
       <div class="card-actions flex gap-2">
-        <button
-          class="btn flex-1"
-          :class="{ 'btn-disabled': isAdding }"
-          type="button"
-          @click="onAddToCart"
-        >
+        <button class="btn flex-1" :class="{ 'btn-disabled': isAdding }" type="button" @click="onAddToCart">
           <span v-if="isAdding" class="loading loading-spinner loading-sm" />
           <Icon v-else name="heroicons:shopping-cart" class="w-5 h-5" />
           <span class="hidden sm:inline">В корзину</span>
         </button>
-        <NuxtLink
-          :to="`/products/${product.id}`"
-          class="btn btn-ghost btn-square"
-          title="Подробнее"
-        >
+        <NuxtLink :to="`/products/${product.id}`" class="btn btn-ghost btn-square" title="Подробнее">
           <Icon name="heroicons:arrow-right" class="w-5 h-5" />
         </NuxtLink>
       </div>

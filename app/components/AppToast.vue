@@ -23,16 +23,9 @@ const alertClass = (type: string) => {
   <Teleport to="body">
     <div class="toast toast-top toast-end z-50">
       <TransitionGroup name="toast">
-        <div
-          v-for="toast in toastStore.toasts"
-          :key="toast.id"
-          :class="['alert alert-soft', alertClass(toast.type)]"
-        >
+        <div v-for="toast in toastStore.toasts" :key="toast.id" :class="['alert alert-soft', alertClass(toast.type)]">
           <span>{{ toast.message }}</span>
-          <button
-            class="btn btn-ghost btn-xs btn-circle"
-            @click="toastStore.remove(toast.id)"
-          >
+          <button class="btn btn-ghost btn-xs btn-circle" @click="toastStore.remove(toast.id)">
             ✕
           </button>
         </div>

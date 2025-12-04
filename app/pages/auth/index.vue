@@ -4,46 +4,23 @@
       <div class="card bg-base-100 shadow-2xl">
         <div class="card-body p-6 sm:p-8">
           <!-- Табы -->
-          <div
-            role="tablist"
-            class="tabs tabs-boxed bg-base-200 p-1 mb-8 gap-1 rounded-lg"
-          >
+          <div role="tablist" class="tabs tabs-boxed bg-base-200 p-1 mb-8 gap-1 rounded-lg">
             <button
-              role="tab"
-              class="tab flex-1 font-medium transition-all rounded-lg"
-              :class="
-                activeTab === 'login' ? 'tab-active bg-base-100 shadow' : ''
-              "
-              type="button"
-              @click="setActiveTab('login')"
-            >
-              <Icon
-                name="heroicons:arrow-right-on-rectangle"
-                class="w-4 h-4 mr-2"
-              />
+role="tab" class="tab flex-1 font-medium transition-all rounded-lg" :class="activeTab === 'login' ? 'tab-active bg-base-100 shadow' : ''
+              " type="button" @click="setActiveTab('login')">
+              <Icon name="heroicons:arrow-right-on-rectangle" class="w-4 h-4 mr-2" />
               Вход
             </button>
             <button
-              role="tab"
-              class="tab flex-1 font-medium transition-all rounded-lg"
-              :class="
-                activeTab === 'register' ? 'tab-active bg-base-100 shadow' : ''
-              "
-              type="button"
-              @click="setActiveTab('register')"
-            >
+role="tab" class="tab flex-1 font-medium transition-all rounded-lg" :class="activeTab === 'register' ? 'tab-active bg-base-100 shadow' : ''
+              " type="button" @click="setActiveTab('register')">
               <Icon name="heroicons:user-plus" class="w-4 h-4 mr-2" />
               Регистрация
             </button>
           </div>
 
           <!-- Форма входа -->
-          <form
-            v-if="activeTab === 'login'"
-            novalidate
-            class="space-y-5"
-            @submit.prevent="login"
-          >
+          <form v-if="activeTab === 'login'" novalidate class="space-y-5" @submit.prevent="login">
             <div class="text-center mb-6">
               <h2 class="text-2xl font-bold">Добро пожаловать!</h2>
               <p class="text-base-content/60 mt-1">Войдите в свой аккаунт</p>
@@ -54,31 +31,13 @@
               <span>{{ loginErrorMsg }}</span>
             </div>
 
-            <BaseInput
-              v-model="loginEmail"
-              title="Email"
-              placeholder="your@email.com"
-              type="email"
-            />
+            <BaseInput v-model="loginEmail" title="Email" placeholder="your@email.com" type="email" />
 
-            <BaseInput
-              v-model="loginPassword"
-              title="Пароль"
-              placeholder="Введите пароль"
-              type="password"
-            />
+            <BaseInput v-model="loginPassword" title="Пароль" placeholder="Введите пароль" type="password" />
 
-            <button
-              :disabled="loginLoading"
-              class="btn btn-primary btn-block btn-lg"
-              type="submit"
-            >
+            <button :disabled="loginLoading" class="btn btn-primary btn-block btn-lg" type="submit">
               <span v-if="loginLoading" class="loading loading-spinner" />
-              <Icon
-                v-else
-                name="heroicons:arrow-right-on-rectangle"
-                class="w-5 h-5"
-              />
+              <Icon v-else name="heroicons:arrow-right-on-rectangle" class="w-5 h-5" />
               {{ loginLoading ? "Входим..." : "Войти" }}
             </button>
           </form>
@@ -98,65 +57,27 @@
             </div>
 
             <BaseInput
-              v-model="registerName"
-              title="Имя"
-              placeholder="Ваше имя"
-              type="text"
-              required
-              :errors="fieldErrorList('name')"
-              @blur="markTouched('name')"
-            />
+v-model="registerName" title="Имя" placeholder="Ваше имя" type="text" required
+              :errors="fieldErrorList('name')" @blur="markTouched('name')" />
             <BaseInput
-              v-model="registerPhone"
-              title="Телефон"
-              placeholder="+7 (___) ___-__-__"
-              type="tel"
-              required
-              prefix="+7"
-              immutable-prefix
-              :errors="fieldErrorList('phone')"
-              @blur="markTouched('phone')"
-            />
+v-model="registerPhone" title="Телефон" placeholder="+7 (___) ___-__-__" type="tel" required
+              prefix="+7" immutable-prefix :errors="fieldErrorList('phone')" @blur="markTouched('phone')" />
             <BaseInput
-              v-model="registerEmail"
-              title="Email"
-              placeholder="your@email.com"
-              type="email"
-              required
-              :errors="fieldErrorList('email')"
-              @blur="markTouched('email')"
-            />
+v-model="registerEmail" title="Email" placeholder="your@email.com" type="email" required
+              :errors="fieldErrorList('email')" @blur="markTouched('email')" />
             <BaseInput
-              v-model="registerPassword"
-              title="Пароль"
-              placeholder="Минимум 8 символов"
-              type="password"
-              required
-              :errors="fieldErrorList('password')"
-              @blur="markTouched('password')"
-            />
+v-model="registerPassword" title="Пароль" placeholder="Минимум 8 символов" type="password"
+              required :errors="fieldErrorList('password')" @blur="markTouched('password')" />
             <BaseInput
-              v-model="registerConfirmPassword"
-              title="Подтвердите пароль"
-              placeholder="Повторите пароль"
-              type="password"
-              required
-              :errors="fieldErrorList('confirm')"
-              @blur="markTouched('confirm')"
-            />
+v-model="registerConfirmPassword" title="Подтвердите пароль" placeholder="Повторите пароль"
+              type="password" required :errors="fieldErrorList('confirm')" @blur="markTouched('confirm')" />
 
             <div class="divider my-2" />
 
             <!-- Чекбоксы -->
             <div class="space-y-3">
-              <label
-                class="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-base-200 transition-colors"
-              >
-                <input
-                  v-model="agreeConsent"
-                  type="checkbox"
-                  class="checkbox checkbox-primary mt-0.5"
-                >
+              <label class="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-base-200 transition-colors">
+                <input v-model="agreeConsent" type="checkbox" class="checkbox checkbox-primary mt-0.5">
                 <span class="text-sm">
                   Согласен(а) на
                   <NuxtLink class="link font-medium" to="/consent">
@@ -165,14 +86,8 @@
                 </span>
               </label>
 
-              <label
-                class="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-base-200 transition-colors"
-              >
-                <input
-                  v-model="agreePrivacy"
-                  type="checkbox"
-                  class="checkbox checkbox-primary mt-0.5"
-                >
+              <label class="flex items-start gap-3 cursor-pointer p-3 rounded-lg hover:bg-base-200 transition-colors">
+                <input v-model="agreePrivacy" type="checkbox" class="checkbox checkbox-primary mt-0.5">
                 <span class="text-sm">
                   Согласен(а) с
                   <NuxtLink class="link font-medium" to="/privacy">
@@ -183,10 +98,8 @@
             </div>
 
             <button
-              :disabled="registerLoading || !agreeConsent || !agreePrivacy"
-              class="btn btn-primary btn-block btn-lg mt-6"
-              type="submit"
-            >
+:disabled="registerLoading || !agreeConsent || !agreePrivacy"
+              class="btn btn-primary btn-block btn-lg mt-6" type="submit">
               <span v-if="registerLoading" class="loading loading-spinner" />
               <Icon v-else name="heroicons:user-plus" class="w-5 h-5" />
               {{ registerLoading ? "Регистрируем..." : "Зарегистрироваться" }}

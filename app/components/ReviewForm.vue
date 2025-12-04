@@ -3,17 +3,12 @@
     <!-- Форма для неавторизованных -->
     <div v-if="!isAuthenticated" class="card bg-base-100 shadow-xl">
       <div class="card-body text-center py-12">
-        <Icon
-          name="heroicons:chat-bubble-left-right"
-          class="w-16 h-16 mx-auto mb-4 text-base-content/30"
-        />
+        <Icon name="heroicons:chat-bubble-left-right" class="w-16 h-16 mx-auto mb-4 text-base-content/30" />
         <h3 class="text-xl font-semibold mb-2">Оставьте отзыв о товаре</h3>
         <p class="text-base-content/70 mb-4">
           Войдите, чтобы поделиться мнением
         </p>
-        <NuxtLink to="/auth" class="btn btn-primary btn-lg"
-          >Войти в аккаунт</NuxtLink
-        >
+        <NuxtLink to="/auth" class="btn btn-primary btn-lg">Войти в аккаунт</NuxtLink>
       </div>
     </div>
 
@@ -31,19 +26,11 @@
             <div class="flex items-center gap-2 bg-base-200 p-4 rounded-lg">
               <div class="rating rating-lg gap-2">
                 <input
-                  v-for="star in 5"
-                  :key="star"
-                  v-model.number="formData.rating"
-                  type="radio"
+v-for="star in 5" :key="star" v-model.number="formData.rating" type="radio"
                   :name="`rating-${productId}`"
-                  class="mask mask-star-2 bg-warning cursor-pointer hover:scale-110 transition-transform"
-                  :value="star"
-                >
+                  class="mask mask-star-2 bg-warning cursor-pointer hover:scale-110 transition-transform" :value="star">
               </div>
-              <span
-                v-if="formData.rating > 0"
-                class="text-lg font-semibold ml-2"
-              >
+              <span v-if="formData.rating > 0" class="text-lg font-semibold ml-2">
                 {{ formData.rating }} из 5
               </span>
             </div>
@@ -59,16 +46,13 @@
             </label>
             <div class="relative">
               <textarea
-                v-model="formData.comment"
+v-model="formData.comment"
                 class="textarea textarea-bordered w-full resize-none min-h-[120px] text-base"
-                :class="{ 'textarea-error': errors.comment }"
-                placeholder="Общее впечатление"
-                :maxlength="1000"
-              />
+                :class="{ 'textarea-error': errors.comment }" placeholder="Общее впечатление" :maxlength="1000" />
               <div class="flex justify-end items-center gap-2 mt-2">
                 <span v-if="errors.comment" class="text-error text-sm flex-1">{{
                   errors.comment
-                }}</span>
+                  }}</span>
                 <span class="text-sm text-base-content/60">
                   {{ formData.comment.length }} / 1000
                 </span>
@@ -84,12 +68,8 @@
 
             <div
               class="bg-base-200 rounded-lg p-6 text-center border-2 border-dashed border-base-300 hover:border-base-content/30 transition-colors cursor-pointer"
-              @click="() => fileInput?.click()"
-            >
-              <Icon
-                name="heroicons:photo"
-                class="w-12 h-12 mx-auto mb-3 text-base-content/60"
-              />
+              @click="() => fileInput?.click()">
+              <Icon name="heroicons:photo" class="w-12 h-12 mx-auto mb-3 text-base-content/60" />
               <p class="text-base font-medium mb-2">
                 Загрузите не более 10 файлов
               </p>
@@ -97,51 +77,31 @@
                 Форматы: JPG, PNG, MP4. Макс. размер: 20 МБ
               </p>
               <input
-                ref="fileInput"
-                type="file"
-                class="hidden"
-                accept="image/jpeg,image/jpg,image/png,video/mp4"
-                multiple
-                @change="handleFileSelect"
-              >
+ref="fileInput" type="file" class="hidden" accept="image/jpeg,image/jpg,image/png,video/mp4"
+                multiple @change="handleFileSelect">
             </div>
 
             <!-- Превью выбранных файлов -->
-            <div
-              v-if="selectedFiles.length > 0"
-              class="grid grid-cols-4 gap-3 mt-4 sm:grid-cols-5 md:grid-cols-6"
-            >
+            <div v-if="selectedFiles.length > 0" class="grid grid-cols-4 gap-3 mt-4 sm:grid-cols-5 md:grid-cols-6">
               <div
-                v-for="(file, index) in selectedFiles"
-                :key="index"
-                class="group relative aspect-square overflow-hidden rounded-xl bg-base-300 border-2 border-base-300 hover:border-primary transition-colors"
-              >
+v-for="(file, index) in selectedFiles" :key="index"
+                class="group relative aspect-square overflow-hidden rounded-xl bg-base-300 border-2 border-base-300 hover:border-primary transition-colors">
                 <!-- Превью изображения -->
                 <img
-                  v-if="file.type.startsWith('image/')"
-                  :src="file.preview"
-                  :alt="file.name"
-                  class="w-full h-full object-cover"
-                >
+v-if="file.type.startsWith('image/')" :src="file.preview" :alt="file.name"
+                  class="w-full h-full object-cover">
 
                 <!-- Иконка видео -->
-                <div
-                  v-else
-                  class="w-full h-full flex flex-col items-center justify-center bg-base-200"
-                >
-                  <Icon
-                    name="heroicons:video-camera"
-                    class="w-10 h-10 text-base-content/60 mb-1"
-                  />
+                <div v-else class="w-full h-full flex flex-col items-center justify-center bg-base-200">
+                  <Icon name="heroicons:video-camera" class="w-10 h-10 text-base-content/60 mb-1" />
                   <span class="text-xs text-base-content/60">Видео</span>
                 </div>
 
                 <!-- Кнопка удаления -->
                 <button
-                  type="button"
+type="button"
                   class="btn btn-circle btn-xs btn-error absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                  @click.stop="removeFile(index)"
-                >
+                  @click.stop="removeFile(index)">
                   <Icon name="heroicons:x-mark" class="w-3 h-3" />
                 </button>
               </div>
@@ -151,35 +111,19 @@
           <!-- Анонимность -->
           <div class="mb-6">
             <label
-              class="flex items-start gap-3 p-4 bg-base-200 rounded-lg cursor-pointer hover:bg-base-300 transition-colors"
-            >
-              <input
-                v-model="formData.isAnonymous"
-                type="checkbox"
-                class="checkbox checkbox-primary mt-0.5"
-              >
+              class="flex items-start gap-3 p-4 bg-base-200 rounded-lg cursor-pointer hover:bg-base-300 transition-colors">
+              <input v-model="formData.isAnonymous" type="checkbox" class="checkbox checkbox-primary mt-0.5">
               <div class="flex-1">
-                <span class="text-base font-medium block mb-1"
-                  >Сделать отзыв анонимным</span
-                >
-                <span class="text-sm text-base-content/70"
-                  >Имя и email не будут показываться</span
-                >
+                <span class="text-base font-medium block mb-1">Сделать отзыв анонимным</span>
+                <span class="text-sm text-base-content/70">Имя и email не будут показываться</span>
               </div>
             </label>
           </div>
 
           <!-- Кнопки -->
           <div class="flex justify-end gap-3 pt-4 border-t border-base-300">
-            <button
-              type="submit"
-              class="btn btn-primary btn-lg px-8"
-              :disabled="isSubmitting || !formData.rating"
-            >
-              <span
-                v-if="isSubmitting"
-                class="loading loading-spinner loading-sm"
-              />
+            <button type="submit" class="btn btn-primary btn-lg px-8" :disabled="isSubmitting || !formData.rating">
+              <span v-if="isSubmitting" class="loading loading-spinner loading-sm" />
               <span v-else>Отправить отзыв</span>
             </button>
           </div>
