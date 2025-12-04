@@ -1,40 +1,68 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 py-8">
     <div v-if="product" class="space-y-8">
-      <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-          <h1 class="text-3xl font-bold mb-4">{{ product.name }}</h1>
-          <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <figure>
-              <img
-                :src="product.image"
-                :alt="product.name"
-                class="rounded-xl w-full h-96 object-contain"
-              >
+      <!-- Хлебные крошки -->
+      <div class="breadcrumbs text-sm">
+        <ul>
+          <li>
+            <NuxtLink to="/">Главная</NuxtLink>
+          </li>
+          <li>
+            <NuxtLink to="/products">Каталог</NuxtLink>
+          </li>
+          <li class="text-base-content/60">{{ product.name }}</li>
+        </ul>
+      </div>
+
+      <!-- Основная информация о товаре -->
+      <div class="card bg-base-100 shadow-xl overflow-hidden">
+        <div class="card-body p-0">
+          <div class="grid grid-cols-1 gap-0 lg:grid-cols-2">
+            <!-- Изображение -->
+            <figure class="bg-base-200/30 p-8 flex items-center justify-center relative">
+              <img :src="product.image" :alt="product.name" class="max-h-96 w-full object-contain">
+              <!-- Скидка badge -->
+              <div v-if="product.oldPrice" class="absolute top-4 left-4">
+                <span class="badge badge-error badge-lg font-bold px-4 py-3">
+                  -{{ discountPercent }}%
+                </span>
+              </div>
             </figure>
-            <div class="space-y-4">
-              <p class="text-base">{{ product.shortDescription }}</p>
-              <div class="divider" />
-              <div class="flex flex-col gap-2">
-                <span
-                  v-if="product.oldPrice"
-                  class="text-lg text-base-content/50 line-through"
-                  >{{ product.oldPrice }} ₽</span
-                >
-                <span class="text-3xl font-bold">{{ product.price }} ₽</span>
+
+            <!-- Информация -->
+            <div class="p-6 lg:p-8 flex flex-col">
+              <h1 class="text-2xl lg:text-3xl font-bold mb-4">
+                {{ product.name }}
+              </h1>
+              <p class="text-base-content/70 mb-6">
+                {{ product.shortDescription }}
+              </p>
+
+              <div class="divider my-2" />
+
+              <!-- Цена -->
+              <div class="mb-6">
+                <div v-if="product.oldPrice" class="flex items-center gap-3 mb-1">
+                  <span class="text-xl text-base-content/40 line-through">
+                    {{ formatPrice(product.oldPrice) }}
+                  </span>
+                  <span class="badge badge-error">Скидка</span>
+                </div>
+                <span class="text-4xl font-bold">
+                  {{ formatPrice(product.price) }}
+                </span>
               </div>
-              <div class="flex gap-3 flex-row">
-                <button
-                  class="btn btn-ghost border-2 border-base-content/20 flex-1"
-                  @click="onBuy"
-                >
-                  Купить
+
+              <!-- Кнопки -->
+              <div class="flex gap-3 mt-auto">
+                <button class="btn btn-lg flex-1" :class="{ 'btn-disabled': isAddingToCart }" @click="onBuy">
+                  <span v-if="isAddingToCart" class="loading loading-spinner" />
+                  <Icon v-else name="heroicons:bolt" class="w-5 h-5" />
+                  Купить сейчас
                 </button>
-                <button
-                  class="btn btn-ghost border-2 border-base-content/20"
-                  @click="onAddToCart"
-                >
-                  В корзину
+                <button class="btn btn-outline btn-lg" :class="{ 'btn-disabled': isAddingToCart }" @click="onAddToCart">
+                  <Icon name="heroicons:shopping-cart" class="w-5 h-5" />
+                  <span class="hidden sm:inline">В корзину</span>
                 </button>
               </div>
             </div>
@@ -42,52 +70,56 @@
         </div>
       </div>
 
+      <!-- Характеристики -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
-          <h2 class="card-title">Характеристики товара</h2>
-          <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <h2 class="card-title text-xl mb-4">
+            <Icon name="heroicons:clipboard-document-list" class="w-6 h-6" />
+            Характеристики товара
+          </h2>
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             <div
-              v-for="(value, key) in product.characteristics"
-              :key="key"
-              class="rounded-lg bg-base-200 p-4"
-            >
-              <div class="text-sm text-base-content/70 truncate mb-1">
-                {{ key }}
-              </div>
-              <div class="text-lg font-bold truncate">{{ value }}</div>
+v-for="(value, key) in product.characteristics" :key="key"
+              class="flex justify-between items-center p-4 rounded-xl bg-base-200/50 hover:bg-base-200 transition-colors">
+              <span class="text-sm text-base-content/70">{{ key }}</span>
+              <span class="font-semibold text-right ml-4">{{ value }}</span>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Описание -->
       <div class="card bg-base-100 shadow-xl">
-        <div class="card-body space-y-4">
-          <h2 class="card-title">Подробное описание товара</h2>
-          <p>
+        <div class="card-body">
+          <h2 class="card-title text-xl mb-4">
+            <Icon name="heroicons:document-text" class="w-6 h-6" />
+            Подробное описание
+          </h2>
+          <p class="text-base-content/80 leading-relaxed mb-6">
             {{ product.description }} Этот товар отличается высоким качеством
             исполнения и современными технологиями. Идеально подходит как для
             повседневного использования, так и для профессиональных задач.
             <strong>Официальная гарантия производителя</strong> и поддержка в
             <em>сервисных центрах DNS</em> по всей России.
           </p>
-          <div>
-            <h3 class="text-xl font-semibold mb-3">
-              Особенности и преимущества:
-            </h3>
-            <ul class="list-disc list-inside space-y-2">
-              <li v-for="feature in product.features" :key="feature">
-                {{ feature }}
-              </li>
-            </ul>
-          </div>
+
+          <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Icon name="heroicons:check-badge" class="w-5 h-5 text-success" />
+            Особенности и преимущества
+          </h3>
+          <ul class="space-y-2">
+            <li
+v-for="feature in product.features" :key="feature"
+              class="flex items-start gap-3 p-3 rounded-lg bg-success/10">
+              <Icon name="heroicons:check-circle" class="w-5 h-5 text-success shrink-0 mt-0.5" />
+              <span>{{ feature }}</span>
+            </li>
+          </ul>
         </div>
       </div>
 
       <!-- Статистика отзывов -->
-      <div
-        v-if="reviewStats && reviewStats.totalReviews > 0"
-        class="card bg-base-100 shadow-xl"
-      >
+      <div v-if="reviewStats && reviewStats.totalReviews > 0" class="card bg-base-100 shadow-xl">
         <div class="card-body">
           <h2 class="card-title">Рейтинг товара</h2>
           <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -98,162 +130,130 @@
               </div>
               <div class="rating rating-sm mt-2">
                 <input
-                  v-for="star in 5"
-                  :key="star"
-                  type="radio"
-                  class="mask mask-star bg-warning"
-                  :checked="star === Math.round(reviewStats.averageRating)"
-                  disabled
-                >
+v-for="star in 5" :key="star" type="radio" class="mask mask-star bg-warning"
+                  :checked="star === Math.round(reviewStats.averageRating)" disabled>
               </div>
               <div class="text-sm text-base-content/70 mt-1">
                 {{ reviewStats.totalReviews }}
                 {{
                   reviewStats.totalReviews === 1
                     ? "отзыв"
-                    : reviewStats.totalReviews < 5
-                    ? "отзыва"
-                    : "отзывов"
-                }}
+                    : reviewStats.totalReviews < 5 ? "отзыва" : "отзывов" }} </div>
+              </div>
+
+              <!-- Распределение рейтингов -->
+              <div class="flex-1 space-y-2">
+                <div v-for="rating in [5, 4, 3, 2, 1]" :key="rating" class="flex items-center gap-2">
+                  <span class="text-sm w-8">{{ rating }} ★</span>
+                  <progress
+class="progress progress-warning flex-1"
+                    :value="reviewStats.ratingDistribution[rating as 1 | 2 | 3 | 4 | 5]"
+                    :max="reviewStats.totalReviews" />
+                  <span class="text-sm text-base-content/70 w-8 text-right">
+                    {{
+                      reviewStats.ratingDistribution[rating as 1 | 2 | 3 | 4 | 5]
+                    }}
+                  </span>
+                </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Распределение рейтингов -->
-            <div class="flex-1 space-y-2">
-              <div
-                v-for="rating in [5, 4, 3, 2, 1]"
-                :key="rating"
-                class="flex items-center gap-2"
-              >
-                <span class="text-sm w-8">{{ rating }} ★</span>
-                <progress
-                  class="progress progress-warning flex-1"
-                  :value="reviewStats.ratingDistribution[rating as 1 | 2 | 3 | 4 | 5]"
-                  :max="reviewStats.totalReviews"
-                />
-                <span class="text-sm text-base-content/70 w-8 text-right">
-                  {{
-                    reviewStats.ratingDistribution[rating as 1 | 2 | 3 | 4 | 5]
-                  }}
-                </span>
-              </div>
+        <!-- Форма добавления отзыва -->
+        <ReviewForm v-if="product" :product-id="product.id" @submitted="handleReviewSubmitted" />
+
+        <!-- Список отзывов -->
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title mb-4">
+              Отзывы
+              <span v-if="reviewStats && reviewStats.totalReviews > 0" class="badge bg-base-300 text-base-content">{{
+                reviewStats.totalReviews }}</span>
+            </h2>
+
+            <!-- Загрузка -->
+            <div v-if="reviewsLoading" class="flex items-center justify-center py-8">
+              <span class="loading loading-spinner loading-lg" />
+            </div>
+
+            <!-- Список отзывов -->
+            <div v-else-if="reviews.length > 0" class="space-y-4">
+              <ReviewCard
+v-for="review in reviews" :key="review.$id" :review="review"
+                :can-delete="canDeleteReview(review)" @delete="handleDeleteReview" @open-media="handleOpenMedia" />
+            </div>
+
+            <!-- Нет отзывов -->
+            <div v-else class="text-center py-8 text-base-content/70">
+              <Icon name="heroicons:chat-bubble-left-right" class="w-16 h-16 mx-auto mb-2 opacity-50" />
+              <p>Отзывов пока нет. Будьте первым!</p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Форма добавления отзыва -->
-      <ReviewForm
-        v-if="product"
-        :product-id="product.id"
-        @submitted="handleReviewSubmitted"
-      />
-
-      <!-- Список отзывов -->
-      <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title mb-4">
-            Отзывы
-            <span
-              v-if="reviewStats && reviewStats.totalReviews > 0"
-              class="badge badge-neutral"
-              >{{ reviewStats.totalReviews }}</span
-            >
-          </h2>
-
-          <!-- Загрузка -->
-          <div
-            v-if="reviewsLoading"
-            class="flex items-center justify-center py-8"
-          >
-            <span class="loading loading-spinner loading-lg" />
-          </div>
-
-          <!-- Список отзывов -->
-          <div v-else-if="reviews.length > 0" class="space-y-4">
-            <ReviewCard
-              v-for="review in reviews"
-              :key="review.$id"
-              :review="review"
-              :can-delete="canDeleteReview(review)"
-              @delete="handleDeleteReview"
-              @open-media="handleOpenMedia"
-            />
-          </div>
-
-          <!-- Нет отзывов -->
-          <div v-else class="text-center py-8 text-base-content/70">
-            <Icon
-              name="heroicons:chat-bubble-left-right"
-              class="w-16 h-16 mx-auto mb-2 opacity-50"
-            />
-            <p>Отзывов пока нет. Будьте первым!</p>
-          </div>
-        </div>
+      <div v-else-if="pending" class="flex min-h-[50vh] items-center justify-center">
+        <span class="loading loading-spinner loading-lg" aria-label="Загрузка товара" />
       </div>
-    </div>
+      <AppError v-else-if="error" :title="error.statusMessage ?? 'Произошла ошибка'" :code="error.statusCode" />
+      <div v-else class="flex min-h-[50vh] items-center justify-center">
+        <span class="loading loading-spinner loading-lg" aria-label="Загрузка товара" />
+      </div>
 
-    <div
-      v-else-if="pending"
-      class="flex min-h-[50vh] items-center justify-center"
-    >
-      <span
-        class="loading loading-spinner loading-lg"
-        aria-label="Загрузка товара"
-      />
-    </div>
-    <AppError
-      v-else-if="error"
-      :title="error.statusMessage ?? 'Произошла ошибка'"
-      :code="error.statusCode"
-    />
-    <div v-else class="flex min-h-[50vh] items-center justify-center">
-      <span
-        class="loading loading-spinner loading-lg"
-        aria-label="Загрузка товара"
-      />
-    </div>
+      <!-- Модальное окно для просмотра медиа -->
+      <dialog ref="mediaModal" class="modal" @close="handleModalClose">
+        <div class="modal-box max-w-7xl w-11/12 max-h-[90vh] p-0 overflow-hidden relative">
+          <!-- Кнопка закрытия -->
+          <form method="dialog">
+            <button
+              class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-20 bg-base-100/80 hover:bg-base-100">
+              ✕
+            </button>
+          </form>
 
-    <!-- Модальное окно для просмотра медиа -->
-    <dialog ref="mediaModal" class="modal" @close="handleModalClose">
-      <div class="modal-box max-w-7xl w-11/12 max-h-[90vh] p-0 overflow-hidden">
-        <form method="dialog">
+          <!-- Навигация влево -->
           <button
-            class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2 z-10 bg-base-100/80 hover:bg-base-100"
-          >
-            ✕
+v-if="allMedia.length > 1" type="button"
+            class="btn btn-circle btn-ghost absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-base-100/80 hover:bg-base-100"
+            :disabled="currentMediaIndex <= 0" @click="navigateMedia(-1)">
+            <Icon name="heroicons:chevron-left" class="w-6 h-6" />
           </button>
-        </form>
-        <div
-          v-if="selectedMedia"
-          class="w-full h-full flex items-center justify-center bg-base-200"
-        >
-          <!-- Изображение -->
-          <img
-            v-if="selectedMedia.mediaType === 'image'"
-            :src="getMediaUrl(selectedMedia.fileId)"
-            :alt="selectedMedia.fileName"
-            class="max-w-full max-h-[90vh] w-auto h-auto object-contain"
-          >
-          <!-- Видео -->
-          <video
-            v-else
-            :key="selectedMedia.fileId"
-            ref="videoPlayer"
-            :src="getMediaUrl(selectedMedia.fileId)"
-            class="max-w-full max-h-[90vh] w-auto h-auto"
-            controls
-            controlslist="nodownload"
-          >
-            <track kind="captions" >
-          </video>
+
+          <!-- Навигация вправо -->
+          <button
+v-if="allMedia.length > 1" type="button"
+            class="btn btn-circle btn-ghost absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-base-100/80 hover:bg-base-100"
+            :disabled="currentMediaIndex >= allMedia.length - 1" @click="navigateMedia(1)">
+            <Icon name="heroicons:chevron-right" class="w-6 h-6" />
+          </button>
+
+          <!-- Контент -->
+          <div v-if="selectedMedia" class="w-full h-full flex items-center justify-center bg-base-200 min-h-[50vh]">
+            <!-- Изображение -->
+            <img
+v-if="selectedMedia.mediaType === 'image'" :src="getMediaUrl(selectedMedia.fileId)"
+              :alt="selectedMedia.fileName" class="max-w-full max-h-[85vh] w-auto h-auto object-contain">
+            <!-- Видео -->
+            <video
+v-else :key="selectedMedia.fileId" ref="videoPlayer" :src="getMediaUrl(selectedMedia.fileId)"
+              class="max-w-full max-h-[85vh] w-auto h-auto" controls controlslist="nodownload">
+              <track kind="captions">
+            </video>
+          </div>
+
+          <!-- Индикатор позиции -->
+          <div
+v-if="allMedia.length > 1"
+            class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-base-100/80 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-medium">
+            {{ currentMediaIndex + 1 }} / {{ allMedia.length }}
+          </div>
         </div>
-      </div>
-      <form method="dialog" class="modal-backdrop">
-        <button>Закрыть</button>
-      </form>
-    </dialog>
-  </div>
+        <form method="dialog" class="modal-backdrop">
+          <button>Закрыть</button>
+        </form>
+      </dialog>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -267,6 +267,22 @@ const authStore = useAuthStore();
 const cartStore = useCartStore();
 const toastStore = useToastStore();
 const config = useRuntimeConfig();
+
+// Состояние кнопок
+const isAddingToCart = ref(false);
+
+// Вычисление скидки
+const discountPercent = computed(() => {
+  if (!product?.oldPrice || product.oldPrice <= product.price) return 0;
+  return Math.round(
+    ((product.oldPrice - product.price) / product.oldPrice) * 100
+  );
+});
+
+// Форматирование цены
+function formatPrice(value: number) {
+  return new Intl.NumberFormat("ru-RU").format(value) + " ₽";
+}
 
 // Отзывы
 const {
@@ -282,6 +298,18 @@ const {
 const mediaModal = ref<HTMLDialogElement | null>(null);
 const selectedMedia = ref<ReviewMedia | null>(null);
 const videoPlayer = ref<HTMLVideoElement | null>(null);
+const currentMediaIndex = ref(0);
+
+// Собираем все медиа из всех отзывов в единый массив
+const allMedia = computed(() => {
+  const mediaList: ReviewMedia[] = [];
+  for (const review of reviews.value) {
+    if (review.media && review.media.length > 0) {
+      mediaList.push(...review.media);
+    }
+  }
+  return mediaList;
+});
 
 // Загружаем отзывы и статистику
 onMounted(async () => {
@@ -312,9 +340,49 @@ const handleReviewSubmitted = async () => {
 
 // Открытие модального окна с медиа
 const handleOpenMedia = (media: ReviewMedia) => {
+  // Находим индекс этого медиа в общем массиве
+  const index = allMedia.value.findIndex((m) => m.$id === media.$id);
+  currentMediaIndex.value = index >= 0 ? index : 0;
   selectedMedia.value = media;
   mediaModal.value?.showModal();
 };
+
+// Навигация между медиа
+const navigateMedia = (direction: -1 | 1) => {
+  const newIndex = currentMediaIndex.value + direction;
+  if (newIndex < 0 || newIndex >= allMedia.value.length) return;
+
+  // Останавливаем текущее видео перед переключением
+  if (videoPlayer.value) {
+    videoPlayer.value.pause();
+    videoPlayer.value.currentTime = 0;
+  }
+
+  currentMediaIndex.value = newIndex;
+  selectedMedia.value = allMedia.value[newIndex] ?? null;
+};
+
+// Обработка клавиатурных событий для навигации
+const handleKeydown = (event: KeyboardEvent) => {
+  if (!mediaModal.value?.open) return;
+
+  if (event.key === "ArrowLeft") {
+    event.preventDefault();
+    navigateMedia(-1);
+  } else if (event.key === "ArrowRight") {
+    event.preventDefault();
+    navigateMedia(1);
+  }
+};
+
+// Добавляем обработчик клавиатуры
+onMounted(() => {
+  window.addEventListener("keydown", handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeydown);
+});
 
 // Закрытие модального окна
 const handleModalClose = () => {
@@ -324,6 +392,7 @@ const handleModalClose = () => {
     videoPlayer.value.currentTime = 0;
   }
   selectedMedia.value = null;
+  currentMediaIndex.value = 0;
 };
 
 // Получение URL медиа файла
@@ -332,26 +401,34 @@ const getMediaUrl = (fileId: string) => {
 };
 
 async function onBuy() {
+  if (isAddingToCart.value) return;
   try {
     if (!authStore.isAuthenticated) return navigateTo("/auth");
+    isAddingToCart.value = true;
     await cartStore.addToCart(product!.id, 1);
     return navigateTo("/cart");
   } catch (err) {
     console.error("Failed to add to cart", err);
     if ((err as Error).message === "Unauthorized") return navigateTo("/auth");
     toastStore.error("Ошибка добавления в корзину");
+  } finally {
+    isAddingToCart.value = false;
   }
 }
 
 async function onAddToCart() {
+  if (isAddingToCart.value) return;
   try {
     if (!authStore.isAuthenticated) return navigateTo("/auth");
+    isAddingToCart.value = true;
     await cartStore.addToCart(product!.id, 1);
     toastStore.success("Товар добавлен в корзину");
   } catch (err) {
     console.error("Failed to add to cart", err);
     if ((err as Error).message === "Unauthorized") return navigateTo("/auth");
     toastStore.error("Ошибка добавления в корзину");
+  } finally {
+    isAddingToCart.value = false;
   }
 }
 
@@ -390,9 +467,8 @@ if (product) {
     link: [
       {
         rel: "canonical",
-        href: `${useRuntimeConfig().public.siteUrl || ""}/products/${
-          product.id
-        }`,
+        href: `${useRuntimeConfig().public.siteUrl || ""}/products/${product.id
+          }`,
       },
     ],
   });

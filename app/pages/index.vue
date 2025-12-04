@@ -8,11 +8,7 @@
             Крупнейшая федеральная розничная сеть по продаже цифровой и бытовой
             техники в России
           </p>
-          <NuxtLink
-            class="btn btn-ghost border-2 border-base-content/20"
-            to="/products"
-            >Перейти в каталог</NuxtLink
-          >
+          <NuxtLink class="btn btn-ghost border-2 border-base-content/20" to="/products">Перейти в каталог</NuxtLink>
         </div>
       </div>
     </div>
@@ -70,9 +66,7 @@
                 Sony WH-1000XM5 · AirPods Pro · JBL
               </p>
             </div>
-            <div
-              class="rounded-lg border border-base-content/10 p-4 md:col-span-2"
-            >
+            <div class="rounded-lg border border-base-content/10 p-4 md:col-span-2">
               <p class="text-sm text-base-content/60">Бытовая техника</p>
               <p class="text-lg font-semibold">
                 Холодильники, стиральные машины, роботы-пылесосы
@@ -115,9 +109,7 @@
             приоритетная доставка, дополнительная гарантия и персональные
             скидки.
           </p>
-          <div
-            class="stats stats-vertical w-full bg-base-200 text-base-content/80 mt-4 md:stats-horizontal"
-          >
+          <div class="stats stats-vertical w-full bg-base-200 text-base-content/80 mt-4 md:stats-horizontal">
             <div class="stat">
               <div class="stat-title">Бонусы за год</div>
               <div class="stat-value">до 15%</div>

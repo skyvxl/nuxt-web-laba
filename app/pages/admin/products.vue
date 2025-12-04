@@ -1,8 +1,7 @@
 <template>
   <div class="space-y-6">
     <header
-      class="rounded-2xl bg-base-100 p-6 shadow-xl flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between"
-    >
+      class="rounded-2xl bg-base-100 p-6 shadow-xl flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
       <div>
         <p class="text-sm text-base-content/70">Каталог</p>
         <h1 class="text-3xl font-bold">Управление товарами</h1>
@@ -13,12 +12,7 @@
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
         <label class="input input-bordered flex items-center gap-2 min-w-0">
           <Icon name="ph:magnifying-glass" class="h-4 w-4 opacity-60" />
-          <input
-            v-model="searchQuery"
-            type="search"
-            class="grow"
-            placeholder="Поиск по названию или категории"
-          >
+          <input v-model="searchQuery" type="search" class="grow" placeholder="Поиск по названию или категории">
         </label>
         <button class="btn btn-primary shrink-0" @click="resetForm()">
           + Новый товар
@@ -37,11 +31,7 @@
                 {{ products.length }} записей.
               </p>
             </div>
-            <span
-              v-if="pending"
-              class="loading loading-spinner"
-              aria-label="Загрузка"
-            />
+            <span v-if="pending" class="loading loading-spinner" aria-label="Загрузка" />
           </div>
 
           <div v-if="fetchError" class="alert alert-soft alert-error mb-4">
@@ -69,10 +59,7 @@
                   <td class="text-base-content/80">{{ product.category }}</td>
                   <td class="text-right">
                     {{ formatPrice(product.price) }}
-                    <span
-                      v-if="product.oldPrice"
-                      class="block text-xs text-base-content/60 line-through"
-                    >
+                    <span v-if="product.oldPrice" class="block text-xs text-base-content/60 line-through">
                       {{ formatPrice(product.oldPrice) }}
                     </span>
                   </td>
@@ -80,10 +67,7 @@
                     <button class="btn btn-xs" @click="startEdit(product)">
                       Изменить
                     </button>
-                    <button
-                      class="btn btn-xs btn-error"
-                      @click="removeProduct(product.id)"
-                    >
+                    <button class="btn btn-xs btn-error" @click="removeProduct(product.id)">
                       Удалить
                     </button>
                   </td>
@@ -96,9 +80,7 @@
 
       <section id="create" class="card bg-base-100 shadow-xl">
         <div class="card-body space-y-4">
-          <div
-            class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-          >
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 class="card-title text-xl">
                 {{ isEditing ? "Изменение товара" : "Создание товара" }}
@@ -106,40 +88,26 @@
               <p class="text-sm text-base-content/70">
                 Заполните форму и сохраните изменения.
               </p>
-              <p
-                v-if="isEditing && form.name"
-                class="text-xs text-base-content/60"
-              >
+              <p v-if="isEditing && form.name" class="text-xs text-base-content/60">
                 Сейчас редактируется: {{ form.name }}
               </p>
             </div>
             <div class="flex items-center gap-3">
-              <div
-                class="badge"
-                :class="isEditing ? 'badge-primary' : 'badge-secondary'"
-              >
+              <div class="badge" :class="isEditing ? 'badge-primary' : 'badge-secondary'">
                 {{ isEditing ? "Редактирование" : "Новый товар" }}
               </div>
-              <button
-                v-if="isEditing"
-                type="button"
-                class="btn btn-sm btn-ghost text-error"
-                @click="cancelEditing"
-              >
+              <button v-if="isEditing" type="button" class="btn btn-sm btn-ghost text-error" @click="cancelEditing">
                 Отменить редактирование
               </button>
             </div>
           </div>
 
           <div
-            v-if="formStatus"
-            class="alert alert-soft"
-            :class="{
-              'alert-error': formStatus.type === 'error',
-              'alert-success': formStatus.type === 'success',
-              'alert-info': formStatus.type === 'info',
-            }"
-          >
+v-if="formStatus" class="alert alert-soft" :class="{
+            'alert-error': formStatus.type === 'error',
+            'alert-success': formStatus.type === 'success',
+            'alert-info': formStatus.type === 'info',
+          }">
             <span>{{ formStatus.message }}</span>
           </div>
 
@@ -147,72 +115,36 @@
             <div class="grid gap-4 md:grid-cols-2">
               <label class="form-control">
                 <span class="label-text">Название*</span>
-                <input
-                  v-model="form.name"
-                  type="text"
-                  class="input input-bordered w-full"
-                  required
-                >
+                <input v-model="form.name" type="text" class="input input-bordered w-full" required>
               </label>
               <label class="form-control">
                 <span class="label-text">Категория*</span>
-                <input
-                  v-model="form.category"
-                  type="text"
-                  class="input input-bordered w-full"
-                  required
-                >
+                <input v-model="form.category" type="text" class="input input-bordered w-full" required>
               </label>
               <label class="form-control">
                 <span class="label-text">Цена*</span>
-                <input
-                  v-model="form.price"
-                  type="number"
-                  step="0.01"
-                  class="input input-bordered w-full"
-                  required
-                >
+                <input v-model="form.price" type="number" step="0.01" class="input input-bordered w-full" required>
               </label>
               <label class="form-control">
                 <span class="label-text">Старая цена</span>
-                <input
-                  v-model="form.oldPrice"
-                  type="number"
-                  step="0.01"
-                  class="input input-bordered w-full"
-                >
+                <input v-model="form.oldPrice" type="number" step="0.01" class="input input-bordered w-full">
               </label>
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
               <label class="form-control">
                 <span class="label-text">Ссылка на изображение*</span>
-                <input
-                  v-model="form.image"
-                  type="url"
-                  class="input input-bordered w-full"
-                  required
-                >
+                <input v-model="form.image" type="url" class="input input-bordered w-full" required>
               </label>
               <label class="form-control">
                 <span class="label-text">Короткое описание*</span>
-                <input
-                  v-model="form.shortDescription"
-                  type="text"
-                  class="input input-bordered w-full"
-                  required
-                >
+                <input v-model="form.shortDescription" type="text" class="input input-bordered w-full" required>
               </label>
             </div>
 
             <label class="form-control">
               <span class="label-text">Полное описание*</span>
-              <textarea
-                v-model="form.description"
-                class="textarea textarea-bordered w-full"
-                rows="5"
-                required
-              />
+              <textarea v-model="form.description" class="textarea textarea-bordered w-full" rows="5" required />
             </label>
 
             <div class="grid gap-6 lg:grid-cols-2">
@@ -223,38 +155,23 @@
                 </p>
                 <div class="flex flex-wrap gap-3">
                   <input
-                    v-model="newFeature"
-                    type="text"
-                    class="input input-bordered flex-1 min-w-[200px]"
-                    placeholder="Например, Быстрая зарядка"
-                  >
-                  <button
-                    type="button"
-                    class="btn btn-secondary"
-                    :disabled="!newFeature.trim()"
-                    @click="addFeature"
-                  >
+v-model="newFeature" type="text" class="input input-bordered flex-1 min-w-[200px]"
+                    placeholder="Например, Быстрая зарядка">
+                  <button type="button" class="btn btn-secondary" :disabled="!newFeature.trim()" @click="addFeature">
                     Добавить
                   </button>
                 </div>
                 <ul v-if="form.features.length" class="space-y-2">
                   <li
-                    v-for="(feature, index) in form.features"
-                    :key="`feature-${index}`"
-                    class="flex items-center gap-2 rounded-xl border border-base-content/10 bg-base-200/50 px-3 py-2"
-                  >
+v-for="(feature, index) in form.features" :key="`feature-${index}`"
+                    class="flex items-center gap-2 rounded-xl border border-base-content/10 bg-base-200/50 px-3 py-2">
                     <input
-                      v-model="form.features[index]"
-                      type="text"
+v-model="form.features[index]" type="text"
                       class="input input-sm flex-1 border-none bg-transparent focus:border-base-content/30 focus:outline-none"
-                      :placeholder="`Особенность ${index + 1}`"
-                    >
+                      :placeholder="`Особенность ${index + 1}`">
                     <button
-                      type="button"
-                      class="btn btn-xs btn-ghost text-error"
-                      aria-label="Удалить особенность"
-                      @click="removeFeature(index)"
-                    >
+type="button" class="btn btn-xs btn-ghost text-error" aria-label="Удалить особенность"
+                      @click="removeFeature(index)">
                       <Icon name="ph:x" class="h-4 w-4" />
                     </button>
                   </li>
@@ -272,38 +189,21 @@
                       Строки вида «ключ — значение».
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    class="btn btn-sm"
-                    @click="addCharacteristicRow"
-                  >
+                  <button type="button" class="btn btn-sm" @click="addCharacteristicRow">
                     + Добавить
                   </button>
                 </div>
                 <div v-if="form.characteristics.length" class="space-y-3">
                   <div
-                    v-for="(row, index) in form.characteristics"
-                    :key="`characteristic-${index}`"
-                    class="flex flex-wrap gap-2 rounded-xl border border-base-content/10 bg-base-200/50 px-3 py-3"
-                  >
+v-for="(row, index) in form.characteristics" :key="`characteristic-${index}`"
+                    class="flex flex-wrap gap-2 rounded-xl border border-base-content/10 bg-base-200/50 px-3 py-3">
+                    <input v-model="row.key" type="text" class="input input-sm flex-1 min-w-[140px]" placeholder="Ключ">
                     <input
-                      v-model="row.key"
-                      type="text"
-                      class="input input-sm flex-1 min-w-[140px]"
-                      placeholder="Ключ"
-                    >
-                    <input
-                      v-model="row.value"
-                      type="text"
-                      class="input input-sm flex-1 min-w-[140px]"
-                      placeholder="Значение"
-                    >
+v-model="row.value" type="text" class="input input-sm flex-1 min-w-[140px]"
+                      placeholder="Значение">
                     <button
-                      type="button"
-                      class="btn btn-xs btn-ghost text-error"
-                      aria-label="Удалить характеристику"
-                      @click="removeCharacteristicRow(index)"
-                    >
+type="button" class="btn btn-xs btn-ghost text-error" aria-label="Удалить характеристику"
+                      @click="removeCharacteristicRow(index)">
                       Удалить
                     </button>
                   </div>
@@ -316,18 +216,10 @@
 
             <div class="flex flex-wrap gap-3">
               <button class="btn" :disabled="saving" type="submit">
-                <span
-                  v-if="saving"
-                  class="loading loading-spinner loading-sm"
-                />
+                <span v-if="saving" class="loading loading-spinner loading-sm" />
                 {{ isEditing ? "Сохранить изменения" : "Создать товар" }}
               </button>
-              <button
-                class="btn btn-ghost"
-                type="button"
-                :disabled="saving"
-                @click="resetForm()"
-              >
+              <button class="btn btn-ghost" type="button" :disabled="saving" @click="resetForm()">
                 Сбросить
               </button>
             </div>

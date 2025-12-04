@@ -4,21 +4,10 @@
       <span class="label-text">{{ title }}</span>
     </div>
     <input
-      :id="inputId"
-      ref="inputRef"
-      v-model="localValue"
-      :name="title || undefined"
-      :type="type"
-      :placeholder="placeholder || ''"
-      :required="required"
-      class="input input-bordered w-full mb-2"
-      :inputmode="type === 'tel' ? 'numeric' : undefined"
-      :maxlength="type === 'tel' ? 18 : undefined"
-      @beforeinput="handleBeforeInput"
-      @paste="handlePaste"
-      @input="handleInput"
-      @blur="$emit('blur')"
-    >
+:id="inputId" ref="inputRef" v-model="localValue" :name="title || undefined" :type="type"
+      :placeholder="placeholder || ''" :required="required" class="input input-bordered w-full mb-2"
+      :inputmode="type === 'tel' ? 'numeric' : undefined" :maxlength="type === 'tel' ? 18 : undefined"
+      @beforeinput="handleBeforeInput" @paste="handlePaste" @input="handleInput" @blur="$emit('blur')">
     <div v-if="errors?.length" class="label">
       <span class="label-text-alt text-error">{{ errors[0] }}</span>
     </div>
