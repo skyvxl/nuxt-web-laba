@@ -16,14 +16,16 @@ interface CartItem {
  * Maximum number of retry attempts for optimistic locking.
  * If a concurrent update is detected, the function will retry
  * fetching items and recalculating totals.
+ * Set to 10 to handle bursts of parallel requests (e.g., adding 6+ items at once).
  */
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 10;
 
 /**
  * Delay between retries in milliseconds.
  * Uses exponential backoff: retry N will wait BASE_RETRY_DELAY * 2^N ms.
+ * With jitter to reduce collision probability.
  */
-const BASE_RETRY_DELAY = 50;
+const BASE_RETRY_DELAY = 100;
 
 /**
  * Checks if an error is a transient error that should be retried.
@@ -181,7 +183,11 @@ export async function recalculateCartTotalsWithRetry(
       if (versionBefore !== versionAfter) {
         // Cart was modified by another request, retry
         if (attempt < MAX_RETRIES - 1) {
-          const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
+          // Exponential backoff with jitter to reduce collision probability
+          const baseDelay =
+            BASE_RETRY_DELAY * Math.pow(2, Math.min(attempt, 4));
+          const jitter = Math.random() * baseDelay * 0.5;
+          const delay = baseDelay + jitter;
           await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
@@ -208,7 +214,9 @@ export async function recalculateCartTotalsWithRetry(
 
       // Only retry on transient errors (network issues, conflicts)
       if (isRetryableError(error) && attempt < MAX_RETRIES - 1) {
-        const delay = BASE_RETRY_DELAY * Math.pow(2, attempt);
+        const baseDelay = BASE_RETRY_DELAY * Math.pow(2, Math.min(attempt, 4));
+        const jitter = Math.random() * baseDelay * 0.5;
+        const delay = baseDelay + jitter;
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }

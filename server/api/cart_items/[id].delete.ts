@@ -3,18 +3,33 @@ import { recalculateCartTotalsWithRetry } from "../../utils/cartTotals";
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, "id");
-  if (!id) throw createError({ statusCode: 400, statusMessage: "Missing id" });
+  if (!id) throw createError({ statusCode: 400, message: "Missing id" });
 
   const { databases } = createAppwriteServices();
   const config = useRuntimeConfig();
   try {
     const userId = await getAuthenticatedUserId(event, true);
 
-    const item = await databases.getDocument(
-      config.public.appwriteDatabaseId,
-      config.public.appwriteCartItemsCollectionId,
-      id
-    );
+    let item;
+    try {
+      item = await databases.getDocument(
+        config.public.appwriteDatabaseId,
+        config.public.appwriteCartItemsCollectionId,
+        id
+      );
+    } catch (getError: unknown) {
+      // Item not found - already deleted, return success
+      const errorMsg =
+        getError instanceof Error ? getError.message : String(getError);
+      if (
+        errorMsg.includes("not found") ||
+        errorMsg.includes("could not be found")
+      ) {
+        return { id, alreadyDeleted: true };
+      }
+      throw getError;
+    }
+
     const itemDoc = item as unknown as Record<string, unknown>;
     const cartId = String(itemDoc.cartId);
 
@@ -25,21 +40,40 @@ export default defineEventHandler(async (event) => {
     );
     const cartDoc = cart as unknown as Record<string, unknown>;
     if (!cartDoc || String(cartDoc.userId) !== userId) {
-      throw createError({ statusCode: 403, statusMessage: "Forbidden" });
+      throw createError({ statusCode: 403, message: "Forbidden" });
     }
 
-    await databases.deleteDocument(
-      config.public.appwriteDatabaseId,
-      config.public.appwriteCartItemsCollectionId,
-      id
-    );
+    try {
+      await databases.deleteDocument(
+        config.public.appwriteDatabaseId,
+        config.public.appwriteCartItemsCollectionId,
+        id
+      );
+    } catch (deleteError: unknown) {
+      // Item already deleted between get and delete - that's fine
+      const errorMsg =
+        deleteError instanceof Error
+          ? deleteError.message
+          : String(deleteError);
+      if (
+        errorMsg.includes("not found") ||
+        errorMsg.includes("could not be found")
+      ) {
+        return { id, alreadyDeleted: true };
+      }
+      throw deleteError;
+    }
 
     // Recalculate totals with optimistic locking to prevent race conditions
-    await recalculateCartTotalsWithRetry(databases, {
-      databaseId: config.public.appwriteDatabaseId,
-      cartsCollectionId: config.public.appwriteCartsCollectionId,
-      cartItemsCollectionId: config.public.appwriteCartItemsCollectionId,
-    }, cartId);
+    await recalculateCartTotalsWithRetry(
+      databases,
+      {
+        databaseId: config.public.appwriteDatabaseId,
+        cartsCollectionId: config.public.appwriteCartsCollectionId,
+        cartItemsCollectionId: config.public.appwriteCartItemsCollectionId,
+      },
+      cartId
+    );
 
     return { id };
   } catch (error) {
@@ -47,12 +81,12 @@ export default defineEventHandler(async (event) => {
     if (isH3Error(error)) {
       throw error;
     }
-    
+
     // Only unexpected errors should be wrapped as 500
     console.error("Failed to delete cart item", error);
     throw createError({
       statusCode: 500,
-      statusMessage: "Не удалось удалить позицию в корзине",
+      message: "Не удалось удалить позицию в корзине",
     });
   }
 });

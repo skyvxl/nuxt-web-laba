@@ -16,9 +16,8 @@
           </div>
           <ClientOnly>
             <template #fallback>
-              <div class="flex items-center gap-3">
-                <div class="skeleton h-6 w-24" />
-                <div class="skeleton h-8 w-28" />
+              <div class="flex items-end">
+                <div class="skeleton h-6 w-32" />
               </div>
             </template>
             <div v-if="items.length > 0" class="flex items-end">
@@ -39,8 +38,14 @@
           </div>
         </template>
 
+        <!-- Загрузка корзины -->
+        <div v-if="isLoading" class="py-20 flex flex-col items-center justify-center gap-4">
+          <span class="loading loading-spinner loading-lg" />
+          <p class="text-base-content/60">Загрузка корзины...</p>
+        </div>
+
         <!-- Пустая корзина -->
-        <div v-if="!cart || items.length === 0" class="py-16 px-6 text-center">
+        <div v-else-if="!cart || items.length === 0" class="py-16 px-6 text-center">
           <div class="w-24 h-24 mx-auto bg-base-200 rounded-full flex items-center justify-center mb-6">
             <Icon name="heroicons:shopping-cart" class="w-12 h-12 text-base-content/30" />
           </div>
@@ -253,13 +258,20 @@ import type { CartItem } from "~/shared/models/cartItem";
 
 const cartStore = useCartStore();
 
+// Track if initial load has completed
+const initialLoadComplete = ref(false);
+
 // Загружаем корзину при монтировании
 onMounted(async () => {
   await cartStore.fetchCart();
+  initialLoadComplete.value = true;
 });
 
-const { cart, items, totalPrice, totalItems, pendingUpdates, updatingItems } =
+const { cart, items, totalPrice, totalItems, pendingUpdates, updatingItems, loading } =
   storeToRefs(cartStore);
+
+// Show loading state until initial load is complete
+const isLoading = computed(() => !initialLoadComplete.value || loading.value);
 
 const deleteModal = ref<HTMLDialogElement | null>(null);
 const itemToDelete = ref<CartItem | null>(null);

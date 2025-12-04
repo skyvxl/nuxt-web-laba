@@ -41,7 +41,7 @@
         <button class="btn flex-1" :class="{ 'btn-disabled': isAdding }" type="button" @click="onAddToCart">
           <span v-if="isAdding" class="loading loading-spinner loading-sm" />
           <Icon v-else name="heroicons:shopping-cart" class="w-5 h-5" />
-          <span class="hidden sm:inline">В корзину</span>
+          В корзину
         </button>
         <NuxtLink :to="`/products/${product.id}`" class="btn btn-ghost btn-square" title="Подробнее">
           <Icon name="heroicons:arrow-right" class="w-5 h-5" />
@@ -59,7 +59,8 @@ const authStore = useAuthStore();
 const cartStore = useCartStore();
 const toastStore = useToastStore();
 
-const isAdding = ref(false);
+// Используем реактивный computed для отслеживания состояния добавления
+const isAdding = computed(() => cartStore.isAddingProduct(product.id));
 
 const discountPercent = computed(() => {
   if (!product.oldPrice || product.oldPrice <= product.price) return 0;
@@ -79,7 +80,6 @@ async function onAddToCart() {
     if (!authStore.isAuthenticated) {
       return navigateTo("/auth");
     }
-    isAdding.value = true;
     await cartStore.addToCart(product.id, 1);
     toastStore.success("Товар добавлен в корзину");
   } catch (err) {
@@ -88,8 +88,6 @@ async function onAddToCart() {
       return navigateTo("/auth");
     }
     toastStore.error("Ошибка добавления в корзину");
-  } finally {
-    isAdding.value = false;
   }
 }
 </script>

@@ -15,8 +15,12 @@ export const useCartStore = defineStore("cart", () => {
   const updatingItems = ref<Set<string>>(new Set());
   // Per-item timers for debounced updates
   const updateTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
-  // Track adding to cart state
-  const addingToCart = ref(false);
+  // Track adding to cart state per product
+  const addingProducts = ref<Set<string>>(new Set());
+  // Track items being deleted to prevent double-delete
+  const deletingItems = ref<Set<string>>(new Set());
+  // Debounced fetch timer
+  let fetchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   // === Getters ===
   const items = computed(() => cart.value?.items ?? []);
@@ -66,6 +70,15 @@ export const useCartStore = defineStore("cart", () => {
       const response = await $fetch<CartResponse>("/api/carts", {
         credentials: "include",
       });
+
+      // Filter out items that are currently being deleted
+      // This prevents "zombie" items from reappearing after optimistic deletion
+      if (response.cart?.items && deletingItems.value.size > 0) {
+        response.cart.items = response.cart.items.filter(
+          (item) => !deletingItems.value.has(item.id)
+        );
+      }
+
       cart.value = response.cart;
       // Clear pending updates after fetching fresh data
       pendingUpdates.value.clear();
@@ -77,18 +90,29 @@ export const useCartStore = defineStore("cart", () => {
     }
   }
 
+  // Debounced fetch - waits for operations to settle before fetching
+  function scheduleFetchCart(delay = 300) {
+    if (fetchDebounceTimer) {
+      clearTimeout(fetchDebounceTimer);
+    }
+    fetchDebounceTimer = setTimeout(() => {
+      fetchDebounceTimer = null;
+      fetchCart();
+    }, delay);
+  }
+
   async function addToCart(productId: string, quantity = 1) {
     const authStore = useAuthStore();
     if (!authStore.isAuthenticated) {
       throw new Error("Unauthorized");
     }
 
-    // Prevent multiple simultaneous add operations
-    if (addingToCart.value) {
+    // Prevent multiple simultaneous add operations for the same product
+    if (addingProducts.value.has(productId)) {
       return;
     }
 
-    addingToCart.value = true;
+    addingProducts.value.add(productId);
     error.value = null;
 
     try {
@@ -97,14 +121,22 @@ export const useCartStore = defineStore("cart", () => {
         body: { productId, quantity },
         credentials: "include",
       });
-      await fetchCart();
+
+      // Schedule a debounced fetch to get updated cart
+      // This allows multiple rapid adds without blocking
+      scheduleFetchCart(200);
     } catch (err) {
       error.value =
         err instanceof Error ? err.message : "Failed to add to cart";
       throw err;
     } finally {
-      addingToCart.value = false;
+      addingProducts.value.delete(productId);
     }
+  }
+
+  // Check if a specific product is being added
+  function isAddingProduct(productId: string): boolean {
+    return addingProducts.value.has(productId);
   }
 
   // Function that will process the pending update for an item.
@@ -205,16 +237,23 @@ export const useCartStore = defineStore("cart", () => {
       throw new Error("Unauthorized");
     }
 
-    // Optimistic removal from UI
+    // Already deleting this item
+    if (deletingItems.value.has(itemId)) {
+      return;
+    }
+
+    // Store the item for potential rollback
+    const itemToRemove = cart.value?.items.find((item) => item.id === itemId);
+    if (!itemToRemove) return;
+
+    // Mark as deleting to prevent double-delete
+    deletingItems.value.add(itemId);
+
+    // Optimistic removal - immediately remove from array
     if (cart.value?.items) {
-      cart.value = {
-        ...cart.value,
-        items: cart.value.items.filter((item) => item.id !== itemId),
-      };
+      cart.value.items = cart.value.items.filter((item) => item.id !== itemId);
     }
     pendingUpdates.value.delete(itemId);
-
-    loading.value = true;
     error.value = null;
 
     try {
@@ -222,15 +261,31 @@ export const useCartStore = defineStore("cart", () => {
         method: "DELETE",
         credentials: "include",
       });
-      await fetchCart();
-    } catch (err) {
-      error.value =
-        err instanceof Error ? err.message : "Failed to remove item";
-      // Refetch to restore state on error
-      await fetchCart();
-      throw err;
+      // Success - item already removed from UI
+    } catch (err: unknown) {
+      // Check if this is a "not found" error - item already deleted, not an error
+      const errMsg = err instanceof Error ? err.message : String(err);
+      const isNotFoundError =
+        errMsg.includes("not found") ||
+        errMsg.includes("could not be found") ||
+        (err &&
+          typeof err === "object" &&
+          "statusCode" in err &&
+          (err as { statusCode: number }).statusCode === 404);
+
+      if (isNotFoundError) {
+        // Item already deleted on server - this is fine, keep UI as is
+        console.debug(`Cart item ${itemId} already deleted on server`);
+      } else {
+        // Real error - rollback
+        error.value = errMsg || "Failed to remove item";
+        if (cart.value?.items && itemToRemove) {
+          cart.value.items = [...cart.value.items, itemToRemove];
+        }
+        throw err;
+      }
     } finally {
-      loading.value = false;
+      deletingItems.value.delete(itemId);
     }
   }
 
@@ -264,7 +319,12 @@ export const useCartStore = defineStore("cart", () => {
     error.value = null;
     pendingUpdates.value.clear();
     updatingItems.value.clear();
-    addingToCart.value = false;
+    addingProducts.value.clear();
+    deletingItems.value.clear();
+    if (fetchDebounceTimer) {
+      clearTimeout(fetchDebounceTimer);
+      fetchDebounceTimer = null;
+    }
   }
 
   return {
@@ -272,7 +332,7 @@ export const useCartStore = defineStore("cart", () => {
     cart,
     loading,
     error,
-    addingToCart,
+    addingProducts,
     pendingUpdates,
     updatingItems,
     // Getters
@@ -284,6 +344,7 @@ export const useCartStore = defineStore("cart", () => {
     // Actions
     fetchCart,
     addToCart,
+    isAddingProduct,
     updateItem,
     updateItemOptimistic,
     removeItem,
