@@ -3,20 +3,6 @@ import type { Cart } from "~/shared/models/cart";
 import type { CartItem } from "~/shared/models/cartItem";
 import { useAuthStore } from "./auth";
 
-type CartResponse = { cart: (Cart & { items: CartItem[] }) | null };
-
-// Debounce utility
-function debounce<T extends (...args: Parameters<T>) => void>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => void {
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  return (...args: Parameters<T>) => {
-    if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  };
-}
-
 export const useCartStore = defineStore("cart", () => {
   // === State ===
   const cart = ref<(Cart & { items: CartItem[] }) | null>(null);
@@ -27,6 +13,8 @@ export const useCartStore = defineStore("cart", () => {
   const pendingUpdates = ref<Map<string, number>>(new Map());
   // Track if an API call is in progress for each item
   const updatingItems = ref<Set<string>>(new Set());
+  // Per-item timers for debounced updates
+  const updateTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
   // Track adding to cart state
   const addingToCart = ref(false);
 
@@ -119,24 +107,47 @@ export const useCartStore = defineStore("cart", () => {
     }
   }
 
-  // Debounced update function that actually calls the API
-  const debouncedApiUpdate = debounce(async (itemId: string) => {
+  // Function that will process the pending update for an item.
+  // It is safe against concurrent updates: if an update is in-flight
+  // and the quantity changes again, we will schedule another attempt.
+  async function processUpdate(itemId: string) {
+    // Clear any pending timer since we're processing now
+    const timer = updateTimers.get(itemId);
+    if (timer) {
+      clearTimeout(timer);
+      updateTimers.delete(itemId);
+    }
+
     const pendingQty = pendingUpdates.value.get(itemId);
     if (pendingQty === undefined) return;
 
-    // Already updating this item
-    if (updatingItems.value.has(itemId)) return;
+    // If an update is already in progress, schedule a retry shortly after
+    if (updatingItems.value.has(itemId)) {
+      const retry = setTimeout(() => processUpdate(itemId), 200);
+      updateTimers.set(itemId, retry);
+      return;
+    }
 
     updatingItems.value.add(itemId);
+    const qtyToSend = pendingQty;
 
     try {
       await $fetch(`/api/cart_items/${itemId}`, {
         method: "PUT",
-        body: { quantity: pendingQty },
+        body: { quantity: qtyToSend },
         credentials: "include",
       });
-      // After successful update, fetch fresh cart data
-      await fetchCart();
+
+      // Apply server-confirmed quantity locally to avoid a full refetch
+      if (cart.value?.items) {
+        const idx = cart.value.items.findIndex((i) => i.id === itemId);
+        if (idx !== -1) {
+          cart.value.items[idx] = {
+            ...cart.value.items[idx],
+            quantity: qtyToSend,
+          } as CartItem;
+        }
+      }
     } catch (err) {
       error.value =
         err instanceof Error ? err.message : "Failed to update item";
@@ -145,7 +156,23 @@ export const useCartStore = defineStore("cart", () => {
     } finally {
       updatingItems.value.delete(itemId);
     }
-  }, 500); // 500ms debounce
+
+    // If the quantity changed while we were updating, schedule another update
+    const nowPending = pendingUpdates.value.get(itemId);
+    if (nowPending !== undefined && nowPending !== qtyToSend) {
+      // schedule next attempt after short delay (debounce)
+      const nextTimer = setTimeout(() => processUpdate(itemId), 200);
+      updateTimers.set(itemId, nextTimer);
+    } else {
+      // nothing more to do for this item
+      pendingUpdates.value.delete(itemId);
+      const t = updateTimers.get(itemId);
+      if (t) {
+        clearTimeout(t);
+        updateTimers.delete(itemId);
+      }
+    }
+  }
 
   // Optimistic update function - updates UI immediately
   function updateItemOptimistic(itemId: string, quantity: number) {
@@ -160,8 +187,11 @@ export const useCartStore = defineStore("cart", () => {
     // Apply optimistic update immediately
     pendingUpdates.value.set(itemId, quantity);
 
-    // Trigger debounced API call
-    debouncedApiUpdate(itemId);
+    // Schedule per-item debounced API call
+    const existing = updateTimers.get(itemId);
+    if (existing) clearTimeout(existing);
+    const timer = setTimeout(() => processUpdate(itemId), 500);
+    updateTimers.set(itemId, timer);
   }
 
   // Original update function for backwards compatibility

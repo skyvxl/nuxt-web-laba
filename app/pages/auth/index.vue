@@ -159,7 +159,7 @@
                 >
                 <span class="text-sm">
                   Согласен(а) на
-                  <NuxtLink class="link link-primary font-medium" to="/consent">
+                  <NuxtLink class="link font-medium" to="/consent">
                     обработку персональных данных
                   </NuxtLink>
                 </span>
@@ -175,7 +175,7 @@
                 >
                 <span class="text-sm">
                   Согласен(а) с
-                  <NuxtLink class="link link-primary font-medium" to="/privacy">
+                  <NuxtLink class="link font-medium" to="/privacy">
                     политикой конфиденциальности
                   </NuxtLink>
                 </span>
